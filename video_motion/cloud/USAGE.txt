@@ -1,0 +1,41 @@
+GPU video extraction on cp-g4x8-cud
+
+Remote directory: ~/policies/video_motion
+Connect:
+  gcloud compute ssh cp-g4x8-cud --zone us-west4-a --project project-512201fe-6308-4879-83c
+
+Run a video already placed at inputs/NAME.mp4 (30 fps):
+  cd ~/policies/video_motion
+  bash cloud/run-extraction.sh NAME GPU_INDEX
+
+For the current fingerprinted crunch/pickup inputs:
+  bash cloud/run-both.sh
+
+Defaults: physical GPU 1 for crunch, physical GPU 7 for pickup.
+Override with CRUNCH_GPU and PICKUP_GPU. The runner resolves physical GPU
+indices to UUIDs because CUDA enumeration differs when a card is unavailable.
+Check available GPUs before a future run; this VM also hosts other workloads.
+
+Outputs: work/gvhmr/NAME/hmr4d_results.pt
+Logs from run-both.sh: logs/NAME.log and logs/NAME.exit
+The extraction cache is per name. When replacing a video under the same name,
+remove only work/gvhmr/NAME before extracting it again.
+
+Environment: env, Python 3.10, PyTorch 2.7.1 CUDA 12.8, torchvision 0.22.1.
+GVHMR is the pinned local source with device selection and --no-render support.
+Original pretrained checkpoints are pinned and SHA-256 verified by
+cloud/fetch_checkpoints.py using cloud/checkpoints.json. Only the required
+neutral SMPL-X body model is copied; no robot-control credentials are uploaded.
+
+Fresh setup, after installing uv and a C++ compiler:
+  PATH="$HOME/.local/bin:$PATH" V2M_GPU_IDS=1,7 bash cloud/bootstrap.sh
+  python3 cloud/fetch_checkpoints.py
+
+Pose extraction runs on the VM. The current workflow returns the pose cache
+to the Jetson for GMR retargeting, deploy-reference export, and local simulation.
+No fine-tuning or hardware playback is performed by these cloud scripts.
+
+Measured for the current clips (excluding one-time environment installation):
+  crunch: 20.84 s preprocessing + 0.28 s final prediction
+  pickup: 24.00 s preprocessing + 0.27 s final prediction
+The two clips ran concurrently on separate RTX PRO 6000 Blackwell GPUs.

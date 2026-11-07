@@ -1,4 +1,5 @@
 import torch
+from hmr4d import DEVICE
 import torch.nn.functional as F
 import numpy as np
 from .vitpose_pytorch import build_model
@@ -14,7 +15,7 @@ class VitPoseExtractor:
     def __init__(self, tqdm_leave=True):
         ckpt_path = "inputs/checkpoints/vitpose/vitpose-h-multi-coco.pth"
         self.pose = build_model("ViTPose_huge_coco_256x192", ckpt_path)
-        self.pose.cuda().eval()
+        self.pose.to(DEVICE).eval()
 
         self.flip_test = True
         self.tqdm_leave = tqdm_leave
@@ -34,7 +35,7 @@ class VitPoseExtractor:
         vitpose = []
         for j in tqdm(range(0, L, batch_size), desc="ViTPose", leave=self.tqdm_leave):
             # Heat map
-            imgs_batch = imgs[j : j + batch_size, :, :, 32:224].cuda()
+            imgs_batch = imgs[j : j + batch_size, :, :, 32:224].to(DEVICE)
             if self.flip_test:
                 heatmap, heatmap_flipped = self.pose(torch.cat([imgs_batch, imgs_batch.flip(3)], dim=0)).chunk(2)
                 heatmap_flipped = flip_heatmap_coco17(heatmap_flipped)
@@ -45,7 +46,7 @@ class VitPoseExtractor:
 
             if False:
                 # Get joint
-                bbx_xys_batch = bbx_xys[j : j + batch_size].cuda()
+                bbx_xys_batch = bbx_xys[j : j + batch_size].to(DEVICE)
                 method = "hard"
                 if method == "hard":
                     kp2d_pm1, conf = get_heatmap_preds(heatmap)

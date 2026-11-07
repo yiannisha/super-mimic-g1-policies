@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 PROJ_ROOT = Path(__file__).resolve().parents[1]
+DEVICE = os.environ.get("GVHMR_DEVICE", "cuda")
 
 
 def os_chdir_to_proj_root():

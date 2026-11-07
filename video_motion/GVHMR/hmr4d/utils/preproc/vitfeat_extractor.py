@@ -1,4 +1,5 @@
 import torch
+from hmr4d import DEVICE
 from hmr4d.network.hmr2 import load_hmr2, HMR2
 
 
@@ -59,7 +60,7 @@ def get_batch(input_path, bbx_xys, img_ds=0.5, img_dst_size=256, path_type="vide
 
 class Extractor:
     def __init__(self, tqdm_leave=True):
-        self.extractor: HMR2 = load_hmr2().cuda().eval()
+        self.extractor: HMR2 = load_hmr2().to(DEVICE).eval()
         self.tqdm_leave = tqdm_leave
 
     def extract_video_features(self, video_path, bbx_xys, img_ds=0.5):
@@ -75,7 +76,7 @@ class Extractor:
 
         # Inference
         F, _, H, W = imgs.shape  # (F, 3, H, W)
-        imgs = imgs.cuda()
+        imgs = imgs.to(DEVICE)
         batch_size = 16  # 5GB GPU memory, occupies all CUDA cores of 3090
         features = []
         for j in tqdm(range(0, F, batch_size), desc="HMR2 Feature", leave=self.tqdm_leave):

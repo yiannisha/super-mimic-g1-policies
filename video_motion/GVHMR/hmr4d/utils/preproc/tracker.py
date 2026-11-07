@@ -1,5 +1,5 @@
 from ultralytics import YOLO
-from hmr4d import PROJ_ROOT
+from hmr4d import PROJ_ROOT, DEVICE
 
 import torch
 import numpy as np
@@ -24,7 +24,7 @@ class Tracker:
     def track(self, video_path):
         track_history = []
         cfg = {
-            "device": "cuda",
+            "device": DEVICE,
             "conf": 0.5,  # default 0.25, wham 0.5
             "classes": 0,  # human
             "verbose": False,

@@ -1,4 +1,5 @@
 import cv2
+from hmr4d import DEVICE
 import torch
 import pytorch_lightning as pl
 import numpy as np
@@ -20,7 +21,7 @@ from hmr4d.utils.video_io_utils import (
 )
 from hmr4d.utils.vis.cv2_utils import draw_bbx_xyxy_on_image_batch, draw_coco17_skeleton_batch
 
-from hmr4d.utils.preproc import Tracker, Extractor, VitPoseExtractor, SimpleVO
+from hmr4d.utils.preproc import Tracker, Extractor, VitPoseExtractor
 
 from hmr4d.utils.geo.hmr_cam import get_bbx_xys_from_xyxy, estimate_K, convert_K_to_K4, create_camera_sensor
 from hmr4d.utils.geo_transform import compute_cam_angvel
@@ -52,7 +53,10 @@ def parse_args_to_cfg():
         "If the camera zoom in a lot, you can try 135, 200 or even larger values.",
     )
     parser.add_argument("--verbose", action="store_true", help="If true, draw intermediate results")
+    parser.add_argument("--no-render", action="store_true", help="Save poses without rendering the optional SMPL mesh videos")
     args = parser.parse_args()
+    global SKIP_RENDER
+    SKIP_RENDER = args.no_render
 
     # Input
     video_path = Path(args.video)
@@ -145,6 +149,7 @@ def run_preprocess(cfg):
 
     # Get visual odometry results
     if not static_cam:  # use slam to get cam rotation
+        from hmr4d.utils.preproc.relpose.simple_vo import SimpleVO
         if not Path(paths.slam).exists():
             if not cfg.use_dpvo:
                 simple_vo = SimpleVO(cfg.video_path, scale=0.5, step=8, method="sift", f_mm=cfg.f_mm)
@@ -306,8 +311,10 @@ def render_global(cfg):
 if __name__ == "__main__":
     cfg = parse_args_to_cfg()
     paths = cfg.paths
-    Log.info(f"[GPU]: {torch.cuda.get_device_name()}")
-    Log.info(f'[GPU]: {torch.cuda.get_device_properties("cuda")}')
+    Log.info(f"[Device]: {DEVICE}")
+    if DEVICE != "cpu":
+        Log.info(f"[GPU]: {torch.cuda.get_device_name()}")
+        Log.info(f'[GPU]: {torch.cuda.get_device_properties("cuda")}')
 
     # ===== Preprocess and save to disk ===== #
     run_preprocess(cfg)
@@ -318,7 +325,7 @@ if __name__ == "__main__":
         Log.info("[HMR4D] Predicting")
         model: DemoPL = hydra.utils.instantiate(cfg.model, _recursive_=False)
         model.load_pretrained_model(cfg.ckpt_path)
-        model = model.eval().cuda()
+        model = model.eval().to(DEVICE)
         tic = Log.sync_time()
         pred = model.predict(data, static_cam=cfg.static_cam)
         pred = detach_to_cpu(pred)
@@ -327,6 +334,8 @@ if __name__ == "__main__":
         torch.save(pred, paths.hmr4d_results)
 
     # ===== Render ===== #
+    if SKIP_RENDER:
+        raise SystemExit(0)
     render_incam(cfg)
     render_global(cfg)
     if not Path(paths.incam_global_horiz_video).exists():

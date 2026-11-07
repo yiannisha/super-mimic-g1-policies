@@ -1,4 +1,5 @@
 import torch
+from hmr4d import DEVICE
 import pytorch_lightning as pl
 from hydra.utils import instantiate
 from hmr4d.utils.pylogger import Log
@@ -34,7 +35,7 @@ class DemoPL(pl.LightningModule):
             "cam_angvel": data["cam_angvel"][None],
             "f_imgseq": data["f_imgseq"][None],
         }
-        batch = {k: v.cuda() for k, v in batch.items()}
+        batch = {k: v.to(DEVICE) for k, v in batch.items()}
         outputs = self.pipeline.forward(batch, train=False, postproc=True, static_cam=static_cam)
 
         pred = {

@@ -1,0 +1,54 @@
+{
+  "repo": "camenduru/GVHMR",
+  "revision": "21b32d5389e2e59c0737d4c4095bbc0b8c23f66b",
+  "files": [
+    {
+      "type": "file",
+      "oid": "20649d00dc1c5900648594b95de4eef78f7a27ec",
+      "size": 163508011,
+      "lfs": {
+        "oid": "4fae7da2de388d5da3514cb27a2d003f364dacb280e9cf88972b710e589c6b91",
+        "size": 163508011,
+        "pointerSize": 134
+      },
+      "xetHash": "5f6c5642c9b116c7c0671747259a277cd3971f1c868697cc425cb65d7137403b",
+      "path": "gvhmr/gvhmr_siga24_release.ckpt"
+    },
+    {
+      "type": "file",
+      "oid": "46b527a17ee53d47a16caf15c3d61c878a4790be",
+      "size": 2709494041,
+      "lfs": {
+        "oid": "2dcf79638109781d1ae5f5c44fee5f55bc83291c210653feead9b7f04fa6f20e",
+        "size": 2709494041,
+        "pointerSize": 135
+      },
+      "xetHash": "99ca5474f86ce91675903c907a9f70bb2b11176bb5ebe5fd1f396fbed95145f8",
+      "path": "hmr2/epoch=10-step=25000.ckpt"
+    },
+    {
+      "type": "file",
+      "oid": "2072ac0591d04aacf4c55af4104d31ee5eb604cd",
+      "size": 2549075546,
+      "lfs": {
+        "oid": "50e33f4077ef2a6bcfd7110c58742b24c5859b7798fb0eedd6d2215e0a8980bc",
+        "size": 2549075546,
+        "pointerSize": 135
+      },
+      "xetHash": "8690dd34c50b65e62c647adcb26fe7ed9e7ef1a4fc80e221c75fc0828e822751",
+      "path": "vitpose/vitpose-h-multi-coco.pth"
+    },
+    {
+      "type": "file",
+      "oid": "a0510bf3bb96a465f97b81dab2dd2f437e2cccbe",
+      "size": 136867539,
+      "lfs": {
+        "oid": "c4d5a3f000d771762f03fc8b57ebd0aae324aeaefdd6e68492a9c4470f2d1e8b",
+        "size": 136867539,
+        "pointerSize": 134
+      },
+      "xetHash": "d1f571399439be1b86dd637265477bde2738e974720ebbcaa46ef8102fb11786",
+      "path": "yolo/yolov8x.pt"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "state": "cloud_extraction_complete",
+  "vm": "cp-g4x8-cud",
+  "zone": "us-west4-a",
+  "project": "project-512201fe-6308-4879-83c",
+  "remote_root": "~/policies/video_motion",
+  "clips": {
+    "crunch": {
+      "source_sha256": "c3731811880202710779b930ebc6c524ce81f3ce1f3ccee6086749377758b5fd",
+      "input_sha256": "06d1cb41cccfa57fe6e448afbf327ac21ea3b9e7e211f3158f19f838f3e01658",
+      "source_bytes": 1837467
+    },
+    "pickup": {
+      "source_sha256": "939362712d82a3ecb3c58ca85a6f0978fa31f332a2c516e92f4d46fb95b813f9",
+      "input_sha256": "ae1047793be4f1730d4b9d3d230bc31e6eb9c0d14907d075e4ce55eecd78a235",
+      "source_bytes": 2369656
+    }
+  },
+  "physical_gpus": [
+    1,
+    7
+  ],
+  "preprocess_seconds": {
+    "crunch": 20.84,
+    "pickup": 24.0
+  },
+  "pytorch": "2.7.1+cu128"
+}

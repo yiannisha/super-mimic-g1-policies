@@ -56,4 +56,5 @@ for row in a:
     w.append_data(np.concatenate([s[idx_y][:, idx_x, :3], img], 1))
 w.close()
 reader.close()
+r.close()
 print(args.out, len(a), "frames")
