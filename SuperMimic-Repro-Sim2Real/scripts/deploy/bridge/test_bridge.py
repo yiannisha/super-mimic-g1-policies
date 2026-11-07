@@ -94,6 +94,14 @@ log = Path("/tmp/test_bridge.log")
 B = gb.Bridge(DOM, IF, crc=True, hz=500, wd_ms=100, damp_kd=3.0, log_path=log, orphan_s=1.0)
 time.sleep(1.0)
 snap = np.zeros(1, gb.SNAP_DTYPE)
+# ARM Jetsons publish this Python/CRC fixture slower than the original x86 host.
+# Wait for the same five rejected packets rather than assuming a fixture rate.
+deadline = time.monotonic() + 3.0
+while time.monotonic() < deadline:
+    B.read_snap(snap)
+    if snap["n_crc_bad"][0] >= 5:
+        break
+    time.sleep(0.01)
 check("snap read", B.read_snap(snap))
 r = snap[0]
 check("lowstate CRC parity (good accepted)", r["n_rx"] > 300, f"n_rx {r['n_rx']}")

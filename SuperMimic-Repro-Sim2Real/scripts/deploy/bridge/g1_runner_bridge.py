@@ -71,12 +71,23 @@ released >= 100 ms before it can fire again, nothing pressed before the command 
   SIGINT / SIGTERM / SIGHUP / SIGQUIT / exception --> DAMP (performed by the command thread), 1 s of damping
   commands, then exit. After exit NO rt/lowcmd is sent: what the motors then do is UNVERIFIED (see docs/DEPLOY_G1.md#stop-mechanisms-the-only-ones-that-actually-work).
 
+Replay / live selection (without restarting): R1+A in STANDBY_POST rearms the current clip through a timed policy
+handoff, then enters STANDBY_PRE; R1+X is still required to play. The existing stability and thermal start checks
+apply. --policy-bank preloads compatible models and clips before DDS starts. --policy-control-socket exposes
+owner-only local selection/status commands; selection outside STANDBY_POST is rejected and never deferred.
+Both policies remain active during a cross-model handoff; no stand-gain HOLD or damping is used to change models.
+Handoffs have offline tests; their physical balance behavior still needs on-robot validation.
+
 Temperatures: both MotorState_.temperature values of every motor are logged at 50 Hz ("temp", (T, 29, 2)); the
 STANDBY_* status line shows waist roll/pitch/yaw and hip pitch/roll (both sensors), the heating rate and forecast, and
 POLICY prints the same temperatures every --status-s. --temp-headroom MOTOR:SENSOR:DEG raises every temperature limit
 (--max-temp, --warn-temp, --thermal-stop-temp, the forecast) by DEG for that one sensor only (all checks compare
 temp - headroom; logs and status lines show the raw readings). Real run pc2bridge09: waist_roll sensor 1 rose 47 -> 72 C
 in ~4 s at frame 1403 and fell back to 45 C 40 s later (sensor 0 stayed 41 C): --temp-headroom 13:1:10.
+--ignore-temperature-safety disables all runner temperature gates, forecasts/history waits, temperature warnings,
+controlled thermal stops and temperature-triggered DAMP, including the locked-waist temperature-presence check.
+Raw temperature logging/status remains active. This overrides --ignore-heating-rate / --no-temperature-damp;
+other safety checks and any protections implemented by the robot firmware remain active.
 
 Safety -> DAMP: DeployCore abort (tilt vs reference, joint velocity, non-finite state/IMU/action, |action|),
 stale lowstate (> --stale-ms), main loop not producing commands for > (max_overrun + 0.5) cycles in
@@ -121,6 +132,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # repo layout: 
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # deploy-tree layout: all in one dir (searched first)
 import g1_bridge_io as gb  # noqa: E402
 import g1_common as gc  # noqa: E402
+from policy_control import ControlSocket  # noqa: E402
+from supermimic.deploy.live_switch import PolicyBank, PolicyHandoff  # noqa: E402
+from supermimic.deploy.grippers import GripperPlayback  # noqa: E402
+from supermimic.deploy.dex1 import Dex1Config, Dex1Process  # noqa: E402
 from supermimic.deploy.core import (  # noqa: E402
     Clip, DeployConfig, DeployCore, OnnxPolicy, SafetyCfg, interpolate_pose, projected_gravity, static_clip,
 )
@@ -335,6 +350,29 @@ class Runner:
         self.live = ~self.locked
         self.clip_notes = gc.lock_waist_clip_check(args.clip, args.clip_allow_file, args.i_know_clip or ()) if self.lock_waist else []
         self.clips = [Clip.load(p) for p in args.clip]
+        self.clip_paths = list(args.clip)
+        self.bank = None
+        self.bank_aliases = []
+        initial_clip_idx = 0
+        if args.policy_bank:
+            if len(self.clips) != 1:
+                raise ValueError('live policy bank requires exactly one initial --clip')
+            self.bank = PolicyBank(args.policy_bank, args.policy_bank_root, c, args.ort_threads)
+            self.bank_aliases = list(self.bank.motions)
+            initial = [i for i, motion in enumerate(self.bank.motions.values())
+                       if motion.model == args.artifacts.name and motion.clip.name == self.clips[0].name]
+            if len(initial) != 1:
+                raise ValueError('initial policy/clip must uniquely match the policy bank')
+            initial_clip_idx = initial[0]
+            self.clips = [motion.clip for motion in self.bank.motions.values()]
+            self.clip_paths = [self.bank.clip_paths[alias] for alias in self.bank_aliases]
+        self.gripper_playback = (None if args.no_grippers else
+                                GripperPlayback(self.clip_paths, [cl.num_frames for cl in self.clips]))
+        self.gripper_config = Dex1Config.calibrated(args.gripper_calibration,
+                                                   open_q=args.gripper_open, closed_q=args.gripper_closed,
+                                                   kp=args.gripper_kp, kd=args.gripper_kd)
+        self.gripper_worker = None
+        self.gripper_last = None
         # --sync-udp: fire-and-forget (state, clip, frame) datagram every tick for the background-video player
         # (scripts/deploy/bg_sync_server.py); non-blocking, errors ignored, never affects control
         self.sync_addr, self.sync_sock = None, None
@@ -354,6 +392,7 @@ class Runner:
         self.sb_win: collections.deque = collections.deque()  # STANDBY_PRE (t, tilt err [rad], max|dq| live) for the R1+X check
         self.temp_hist: collections.deque = collections.deque()  # STANDBY_PRE (t, per-motor max of the 2 sensors) for the forecast
         self.thermal: dict | None = None  # thermal stop (set once in POLICY): {frame, motor, temp, clip}
+        self.overtemp_warned = False
         self.temp_hr = np.zeros((len(c.joint_names), 2))  # --temp-headroom: per (motor, sensor) limit raise [C]
         for spec in args.temp_headroom or ():
             m, k, d = spec.split(":")
@@ -372,17 +411,10 @@ class Runner:
             k, j = np.unravel_index(int(np.argmax(dq)), dq.shape) if dq.size else (0, 0)
             self.ref_speed.append((float(dq.max()) if dq.size else 0.0, c.joint_names[j], int(k) + 1,
                                    float(np.abs(cl.goal[0, 29:58]).max())))
-        self.policy_fn = OnnxPolicy(args.artifacts / "policy.onnx", threads=args.ort_threads)
+        self.policy_fn = (self.bank.motions[self.bank_aliases[initial_clip_idx]].policy if self.bank else
+                          OnnxPolicy(args.artifacts / "policy.onnx", threads=args.ort_threads))
         self.n_policy_calls = 0
-
-        def counted(obs, goal):
-            self.n_policy_calls += 1
-            a = self.policy_fn(obs, goal)
-            if args.sim_inject_nan_step is not None and self.n_policy_calls >= args.sim_inject_nan_step:
-                a = a * np.nan
-            return a
-
-        self.policy = counted
+        self.policy = self.counted_policy(self.policy_fn)
         prof = dict(STAGES[args.stage])
         for k in ("max_vel_frac", "max_abs_action", "torque_clamp_factor", "max_tilt_hold"):
             v = getattr(args, k)
@@ -396,8 +428,10 @@ class Runner:
         self.stand_kd = STAND_KD.copy()
         self.stand_kd[12:15] = args.stand_waist_kd
         self.stand_kd[15:] = args.stand_arm_kd
-        self.clip_idx = 0
+        self.clip_idx = initial_clip_idx
         self.core: DeployCore | None = None
+        self.switching: PolicyHandoff | None = None
+        self.switch_target_idx = None
         self.end: dict | None = None  # END_HOLD blend (set in run)
         self.lock = threading.RLock()
         self.state = "PASSIVE"
@@ -451,8 +485,110 @@ class Runner:
         self.t0 = time.monotonic()
         self.wall0 = time.time()
         self._alloc_logs()
+        self.control = ControlSocket(args.policy_control_socket) if args.policy_control_socket else None
+
+    def counted_policy(self, fn):
+        def counted(obs, goal):
+            self.n_policy_calls += 1
+            action = fn(obs, goal)
+            if self.a.sim_inject_nan_step is not None and self.n_policy_calls >= self.a.sim_inject_nan_step:
+                action = action * np.nan
+            return action
+        return counted
+
+    def begin_policy_switch(self, index, st, now):
+        # Acceptance is immediate and state-bound. No request is saved for later.
+        with self.lock:
+            if self.state != 'STANDBY_POST':
+                return False, f'policy selection/replay is only allowed in STANDBY_POST (now {self.state})'
+            if self.switching is not None:
+                return False, 'a policy handoff is already in progress'
+            if self.thermal is not None:
+                return False, 'policy selection/replay is disabled after a thermal stop'
+            if self.a.no_policy:
+                return False, '--no-policy is active'
+            ok, why = self.standby_allowed(now - self.state_t, st, next_clip=self.clips[index])
+            if not ok:
+                return False, why
+            fn = self.bank.motions[self.bank_aliases[index]].policy if self.bank else self.policy_fn
+            candidate = DeployCore(self.cfg, self.counted_policy(fn), self.static_pre[index], self.safety)
+            try:
+                self.switching = PolicyHandoff(self.core, candidate, self.a.policy_switch_s,
+                                               same_policy=fn is self.policy_fn)
+            except ValueError as exc:
+                return False, str(exc)
+            self.switch_target_idx = index
+            self.confirm = None
+        label = self.bank_aliases[index] if self.bank else self.clips[index].name
+        self.event('SWITCH', f'selected {label}: {self.a.policy_switch_s:.1f} s policy handoff in STANDBY_POST; '
+                   'then STANDBY_PRE (R1+X is still required to play)')
+        return True, f'handoff to {label} accepted; motion will not start automatically'
+
+    def finish_policy_switch(self):
+        with self.lock:
+            if self.state != 'STANDBY_POST' or self.switching is None or not self.switching.done:
+                return False
+            self.core = self.switching.target
+            self.clip_idx = self.switch_target_idx
+            if self.bank:
+                self.policy_fn = self.bank.motions[self.bank_aliases[self.clip_idx]].policy
+            self.policy = self.core.policy
+            self.switching = None
+            self.switch_target_idx = None
+            self.sb_win.clear()
+            self.temp_hist.clear()
+            self.sbs = None
+            self.confirm = None
+            self.set_state('STANDBY_PRE', f'handoff complete: {self.clips[self.clip_idx].name}; '
+                           'settle, then R1+X to play')
+        return True
+
+    def poll_policy_control(self, st, now):
+        if self.control is None:
+            return
+        received = self.control.poll()
+        if received is None:
+            return
+        message, address = received
+        ok, why = True, ''
+        if message['command'] == 'select':
+            alias = message['motion']
+            if alias not in self.bank_aliases:
+                ok, why = False, f'unknown motion {alias!r}'
+            elif self.state == 'STANDBY_POST' and message['sent'] < self.state_t:
+                ok, why = False, 'request was sent before this STANDBY_POST; retry now (not queued)'
+            else:
+                ok, why = self.begin_policy_switch(self.bank_aliases.index(alias), st, now)
+            if not ok:
+                self.event('REFUSED', f'policy selection: {why}')
+        active = self.bank_aliases[self.clip_idx] if self.bank else self.clips[self.clip_idx].name
+        target = (self.bank_aliases[self.switch_target_idx]
+                  if self.switching is not None and self.bank and self.state != 'DAMP' else None)
+        self.control.reply(address, dict(ok=ok, message=why, state=self.state, active=active,
+                                        switching_to=target, motions=self.bank_aliases))
 
     # ------------------------------------------------------------------ logging
+    def gripper_tick(self, phase, index, frame=0, freeze=False):
+        """One heartbeat per body tick; use the pre-step original reference frame."""
+        worker = self.gripper_worker
+        if worker is None:
+            return
+        try:
+            worker.check()
+            with self.lock:
+                if self.state == 'DAMP':
+                    worker.stop()
+                    return
+                target = self.gripper_playback.resolve(phase, index, frame,
+                                                       freeze=freeze or self.thermal is not None)
+                worker.send(target)
+            if target != self.gripper_last:
+                label = 'inactive' if target is None else f'L={target[0].upper()} R={target[1].upper()}'
+                self.event('GRIPPER', f'{self.clips[index].name} frame {self.gripper_playback.frame}: {label}')
+                self.gripper_last = target
+        except Exception as exc:  # a gripper fault must stop the pickup, not silently lose its grasp
+            self.damp(f'gripper failure: {exc}')
+
     def _alloc_logs(self):
         cap = int(self.a.cmd_log_max_s * self.a.cmd_hz * 1.15)  # + immediate sends after policy steps
         self.cl_cap = cap
@@ -466,7 +602,8 @@ class Runner:
         self.rec_warned = False
         self.rec: dict[str, list] = {k: [] for k in (
             "t", "deadline", "compute_ms", "state", "clip", "frame", "q", "dq", "gyro", "quat", "tick", "state_age_ms",
-            "action", "q_target", "n_clamped", "obs_hist", "cmd_kp_mean", "locked_temp", "locked_mstat", "tilt_err", "temp")}
+            "action", "q_target", "n_clamped", "obs_hist", "cmd_kp_mean", "locked_temp", "locked_mstat", "tilt_err", "temp",
+            "gripper_frame", "gripper_state")}
 
     def event(self, kind: str, msg: str):
         """Thread-safe and non-blocking (only enqueues): callable from any thread."""
@@ -484,6 +621,9 @@ class Runner:
                 return False
             old = self.state
             self.state, self.state_t = new, time.monotonic()
+            if new == 'STANDBY_POST':
+                self.sb_win.clear()
+                self.temp_hist.clear()
         self.event("STATE", f"{old} -> {new}" + (f" ({reason})" if reason else ""))
         return True
 
@@ -501,6 +641,9 @@ class Runner:
                 self.send()
             except Exception:  # noqa: BLE001
                 pass
+        worker = getattr(self, 'gripper_worker', None)
+        if worker is not None:
+            worker.stop()  # latched: a concurrent policy tick cannot re-arm it after DAMP
         self.event("DAMP", f"{old} -> DAMP: {reason}")
 
     def set_cmd(self, q, kp, kd, expect_state: str):
@@ -738,6 +881,20 @@ class Runner:
 
     def startup(self):
         a = self.a
+        if self.gripper_playback is not None and self.gripper_playback.enabled:
+            stamp = time.strftime('%Y%m%d_%H%M%S', time.localtime(self.wall0))
+            log = a.log_dir / f'run_{stamp}.dex1.txt'
+            try:
+                self.gripper_worker = Dex1Process(a.domain, a.iface, self.gripper_config,
+                                                 log, timeout=a.gripper_wait_s)
+            except RuntimeError as exc:
+                raise SystemExit(f'{exc}\nCheck PC2 dex1_gripper.service and the gripper USB/power connections. '
+                                 f'Worker log: {log}') from None
+            print('[startup] DEX1 feedback ready; grippers follow saved clip events (no commands in PASSIVE)', flush=True)
+            print(f'[gripper] calibrated [left, right]: open={self.gripper_config.open_q} closed={self.gripper_config.closed_q}', flush=True)
+            for cl, path, track in zip(self.clips, self.gripper_playback.paths, self.gripper_playback.tracks):
+                if track is not None:
+                    print(f'[gripper] {cl.name}: {path} {track.to_dict()}', flush=True)
         if a.domain == 0 or a.sim_try_check_mode:
             gc.init_dds(a.domain, a.iface)  # Python DDS only for the MotionSwitcher CheckMode RPC (no rt/low* topics)
         self.crc_check = a.domain == 0 and not a.no_state_crc
@@ -777,7 +934,7 @@ class Runner:
                 raise SystemExit(f"mode_machine={mm}, expected {MF} (29-DoF G1 rev 1.0). Abort.")
         if self.lock_waist:
             print(f"[startup] WAIST LOCKED: motors 13/14 now {gc.waist_locked_values(s)}", flush=True)
-            wa = gc.waist_active(s)
+            wa = gc.waist_active(s, check_temperature=not a.ignore_temperature_safety)
             if wa:
                 raise SystemExit(f"--lock-waist but the waist looks ACTIVE (|q| > {gc.WAIST_ACTIVE_Q} rad or temperature != 0): {wa}. Abort.")
         self.mm_latched = s.mode_machine
@@ -794,17 +951,20 @@ class Runner:
         if self.crc_check and self.n_crc_bad:
             print(f"[startup] WARNING {self.n_crc_bad} lowstate CRC failures so far (those messages are dropped)")
         tmax = self.teff(s.temp)[self.live].max()
-        if tmax > a.max_temp:
+        if self.temperature_limit_exceeded(s, a.max_temp):
             raise SystemExit(f"motor temperature {tmax:.0f} C > --max-temp {a.max_temp}")
         # ORT warm-up (first inference allocates; keep it out of the 50 Hz loop)
         for _ in range(3):
             self.policy_fn(np.zeros(930), np.zeros(680))
         gov = _governor()
         g = projected_gravity(s.quat / max(np.linalg.norm(s.quat), 1e-9))
-        f0 = self.f0s[0]
+        f0 = self.f0s[self.clip_idx]
         n_soft = [int(np.count_nonzero((np.abs(f - cl.joint_pos[0]) > 1e-9) & self.live)) for f, cl in zip(self.f0s, self.clips)]
         print("=" * 80)
         print(f"artifacts : {a.artifacts}")
+        if self.bank:
+            print(f"live bank : {self.bank_aliases}; initial={self.bank_aliases[self.clip_idx]}; control={a.policy_control_socket}")
+        print('replay    : R1+A in STANDBY_POST rearms the current motion; then R1+X plays again')
         print(f"clips     : {[c.name + f' ({c.num_frames} fr, {c.num_frames * self.cfg.control_dt:.1f} s)' for c in self.clips]}")
         print(f"start pose: clip frame 0 clipped to soft limits ({n_soft} joints clipped per clip)")
         for cl, (v, jn, fr, v0) in zip(self.clips, self.ref_speed):
@@ -841,17 +1001,29 @@ class Runner:
         else:
             print(f"clip end  : STANDBY_POST (policy keeps standing in the last-frame pose); L2+up TWICE within {a.confirm_s} s -> "
                   f"{a.end_blend_s} s blend to stand gains -> INTERP to the next clip (hoist must carry)")
+        temp_action = 'WARN ONLY (--no-temperature-damp)' if a.no_temperature_damp else 'DAMP'
+        temp_safety = ('temperature safety DISABLED (--ignore-temperature-safety)' if a.ignore_temperature_safety else
+                       f'temp>{a.max_temp} C {temp_action} / >={a.thermal_stop_temp} C in POLICY smooth thermal stop / '
+                       f'>{a.warn_temp} C no start (UNVERIFIED thresholds)')
         print(f"safety    : stale>{a.stale_ms} ms, overrun>{a.max_overrun} cycles, main-loop heartbeat>{(a.max_overrun + 0.5) * 20:.0f} ms, "
-              f"temp>{a.max_temp} C DAMP / >={a.thermal_stop_temp} C in POLICY smooth thermal stop / >{a.warn_temp} C no start (UNVERIFIED thresholds), motor-error mask 0x{a.motor_error_mask:x}")
+              f"{temp_safety}, motor-error mask 0x{a.motor_error_mask:x}")
         for j, k in zip(*np.nonzero(self.temp_hr)):
             print(f"headroom  : {self.cfg.joint_names[j]} sensor {k}: every temperature limit +{self.temp_hr[j, k]:.0f} C (--temp-headroom)")
+        temp_start = 'temperature checks DISABLED' if a.ignore_temperature_safety else f'temp<{a.warn_temp} C'
         print(f"R1+A req  : HOLD>={a.hold_min_s} s, max|q-f0|<{a.hold_tol} rad, max|dq|<{a.start_max_dq} rad/s, "
-              f"tilt vs clip<{a.start_max_tilt_deg} deg, temp<{a.warn_temp} C  -> STANDBY_PRE (policy stands still)")
+              f"tilt vs clip<{a.start_max_tilt_deg} deg, {temp_start}  -> STANDBY_PRE (policy stands still)")
+        heating_gate = (f'heating rate IGNORED; current temperature < '
+                        f'{a.thermal_stop_temp if a.thermal_stop_temp > 0 else a.max_temp} C'
+                        if a.ignore_heating_rate else
+                        f'heating forecast at clip end < {a.thermal_stop_temp} C '
+                        f'(rate over the last {a.temp_rate_window_s:.0f} s, >= {a.temp_rate_min_s:.0f} s needed)')
+        if a.ignore_temperature_safety:
+            heating_gate = 'heating forecast/history wait DISABLED'
         print(f"R1+X req  : STANDBY_PRE>={a.standby_min_s} s; over the last {a.standby_window_s} s tilt err<{a.standby_max_tilt_deg} deg, "
-              f"max|dq|<{a.standby_max_dq} rad/s; temp<{a.warn_temp} C; heating forecast at clip end < {a.thermal_stop_temp} C "
-              f"(rate over the last {a.temp_rate_window_s:.0f} s, >= {a.temp_rate_min_s:.0f} s needed)  -> POLICY (motion)")
+              f"max|dq|<{a.standby_max_dq} rad/s; {temp_start}; {heating_gate} -> POLICY (motion)")
+        temp_warn = '' if a.ignore_temperature_safety else f'temp>{a.warn_temp} C, '
         print(f"standby   : status every {a.status_s} s; WARN |yaw change|>{a.warn_yaw_deg} deg, leg |dq|>{a.warn_leg_dq} rad/s for "
-              f">{a.warn_leg_dq_s} s, temp>{a.warn_temp} C, standby>{a.standby_warn_s:.0f} s (documented cap)")
+              f">{a.warn_leg_dq_s} s, {temp_warn}standby>{a.standby_warn_s:.0f} s (documented cap)")
         print(f"cpu       : governor {gov}; command thread affinity '{a.cmd_cpu}', rt-prio {a.rt_prio}")
         print(f"robot now : proj_grav={np.round(g, 3)}  max|q - f0|={np.abs(s.q - f0)[self.live].max():.3f} rad  max temp={tmax:.0f} C"
               + (" (27 live motors)" if self.lock_waist else ""))
@@ -860,7 +1032,7 @@ class Runner:
         print("            R1+A = policy STANDBY (from HOLD) | R1+X = start the MOTION (from STANDBY_PRE) | L2+B = DAMP (any state)")
         print("            (buttons pressed before the command thread starts are ignored; release and press again)")
         print("=" * 80, flush=True)
-        if tmax > a.warn_temp:
+        if self.temperature_limit_exceeded(s, a.warn_temp):
             print(f"[startup] WARNING max motor temperature {tmax:.0f} C > --warn-temp {a.warn_temp}: R1+A will be refused")
         if not a.sim or a.sim_ask_yes:
             ans = input("Robot on the hoist / area clear / L2+B tested this session? Type 'yes' to start sending rt/lowcmd "
@@ -874,10 +1046,10 @@ class Runner:
             self.check_mode("after confirmation")
             self.pump()
             s2 = self.read_state()
-            if self.teff(s2.temp)[self.live].max() > a.max_temp:
+            if self.temperature_limit_exceeded(s2, a.max_temp):
                 raise SystemExit(f"after 'yes': motor temperature {self.teff(s2.temp)[self.live].max():.0f} C (minus headroom) > --max-temp {a.max_temp}")
-            if self.lock_waist and gc.waist_active(s2):
-                raise SystemExit(f"after 'yes': waist unexpectedly active: {gc.waist_active(s2)}")
+            if self.lock_waist and (wa := gc.waist_active(s2, check_temperature=not a.ignore_temperature_safety)):
+                raise SystemExit(f"after 'yes': waist unexpectedly active: {wa}")
             if s2.mode_machine != self.mm_latched:
                 raise SystemExit(f"after 'yes': mode_machine changed {self.mm_latched} -> {s2.mode_machine}")
             self.pump()
@@ -954,13 +1126,11 @@ class Runner:
             # --- checks valid in every non-damp state
             if state != "DAMP":
                 merr = np.where(self.live, st.motorstate & a.motor_error_mask, 0)  # locked motors: logged, not checked
-                temp = np.where(self.live[:, None], self.teff(st.temp), -np.inf)
-                wa = gc.waist_active(st) if self.lock_waist else None
+                wa = gc.waist_active(st, check_temperature=not a.ignore_temperature_safety) if self.lock_waist else None
                 if wa:
                     self.damp(f"waist unexpectedly active (--lock-waist, |q| > {gc.WAIST_ACTIVE_Q} rad or temperature != 0): {wa}")
-                elif temp.max() > a.max_temp:
-                    j, k = (int(x) for x in np.unravel_index(np.argmax(temp), temp.shape))
-                    self.damp(f"motor temperature {st.temp[j, k]:.0f} C on {c.joint_names[j]} sensor {k} > {a.max_temp + self.temp_hr[j, k]:.0f} C")
+                elif self.check_temperature_damp(st):
+                    pass
                 elif a.domain == 0 and np.any(merr != 0):
                     j = int(np.argmax(merr != 0))
                     self.damp(f"motor error word 0x{int(st.motorstate[j]):x} (masked 0x{int(merr[j]):x}) on {c.joint_names[j]}")
@@ -975,17 +1145,26 @@ class Runner:
             state = self.state
 
             # --- events (buttons or auto-sequence); stale presses (main loop was late) are dropped
+            self.poll_policy_control(st, t_start)
             evs = []
             while self.pending:
                 name, t_ev = self.pending.popleft()
                 if t_start - t_ev > a.button_max_age_s:
                     self.event("INFO", f"dropped stale button event {name} ({(t_start - t_ev) * 1e3:.0f} ms old)")
+                elif name == 'policy' and self.state == 'STANDBY_POST' and t_ev < self.state_t:
+                    self.event('INFO', 'R1+A received before STANDBY_POST ignored; release and press again to replay')
                 else:
                     evs.append(name)
             if a.auto_sequence and state != "DAMP":
                 evs += self.auto_events(state, t_in, st)
             for ev in evs:
+                if self.switching is not None:
+                    self.event('INFO', f'{COMBO_LABEL.get(ev, ev)} ignored during policy handoff (L2+B still works)')
+                    continue
                 if ev == "interp":
+                    if self.bank and state == 'STANDBY_POST':
+                        self.event('INFO', 'live bank: select a motion with switch-motion.sh, or R1+A to replay')
+                        continue
                     if state not in ("PASSIVE", "END_HOLD", "STANDBY_PRE", "STANDBY_POST"):
                         self.event("INFO", f"L2+up ignored in {state}")
                         continue
@@ -1034,6 +1213,11 @@ class Runner:
                     self.set_state("INTERP", f"to f0 of {clip.name}")
                     state, t_in = "INTERP", 0.0
                 elif ev == "policy":
+                    if state == 'STANDBY_POST':
+                        ok, why = self.begin_policy_switch(self.clip_idx, st, t_start)
+                        if not ok:
+                            self.event('REFUSED', f'R1+A (replay): {why}')
+                        continue
                     if state == "STANDBY_PRE":
                         self.event("INFO", "R1+A ignored in STANDBY_PRE (the policy is already standing): press R1+X to start the motion")
                         continue
@@ -1081,6 +1265,11 @@ class Runner:
 
             # --- per-state targets
             t_c0 = time.monotonic()
+            # DeployCore.step increments frame before returning. Capture it here so an event at
+            # frame N fires at N * control_dt, rather than one tick early from StepResult.frame.
+            gripper_context = (state, self.clip_idx,
+                               self.core.frame if self.core is not None and state == 'POLICY' else 0,
+                               self.switching is not None)
             if state == "PASSIVE":
                 self.set_cmd(None, np.zeros(N), np.full(N, DAMP_KD), "PASSIVE")
             elif state == "INTERP":
@@ -1099,16 +1288,17 @@ class Runner:
                 core = self.core
                 if state == "STANDBY_PRE" and a.sim_band_file and self.band_off_t is None and 0 <= a.sim_band_release_standby_s <= t_in:
                     self.release_band(f"{a.sim_band_release_standby_s:.1f} s into STANDBY_PRE")
-                if state == "POLICY" and self.thermal is None and a.thermal_stop_temp > 0:
+                if state == "POLICY" and not a.ignore_temperature_safety and self.thermal is None and a.thermal_stop_temp > 0:
                     te = np.where(self.live[:, None], self.teff(st.temp), -np.inf)
                     if float(te.max()) >= a.thermal_stop_temp:
                         j, k = (int(x) for x in np.unravel_index(np.argmax(te), te.shape))
                         self.thermal_stop(core, clip, j, float(st.temp[j, k]), k)
                 # the quantity DeployCore's tilt abort compares with max_tilt_err (pelvis gravity vs reference), for the log
                 tilt_err = _tilt_vs(st.quat, core.clip.proj_grav[min(core.frame, core.clip.num_frames - 1)])
-                r = core.step(st.q, st.dq, st.gyro, st.quat, advance=(state == "POLICY"))
+                r = (self.switching.step(st.q, st.dq, st.gyro, st.quat) if self.switching is not None else
+                     core.step(st.q, st.dq, st.gyro, st.quat, advance=(state == "POLICY")))
                 action, q_t, n_cl, frame = r.action, r.q_target, r.n_clamped, r.frame
-                if state == "STANDBY_PRE":
+                if state in STANDBY_STATES:
                     self.sb_win.append((t_start, tilt_err, float(np.abs(st.dq)[self.live].max())))
                     while self.sb_win and t_start - self.sb_win[0][0] > a.standby_window_s:
                         self.sb_win.popleft()
@@ -1127,6 +1317,8 @@ class Runner:
                     self.damp(f"DeployCore abort in {state} at frame {r.frame}: {r.abort}")
                 elif self.set_cmd(q_t, c.kp, c.kd, state):
                     self.send()
+                    if self.switching is not None and self.switching.done:
+                        self.finish_policy_switch()
                     if state == "POLICY" and r.done and self.thermal is not None:
                         th = self.thermal
                         why = (f"thermal stop done ({c.joint_names[th['motor']]} {th['temp']:.0f} C at frame {th['frame']}); "
@@ -1150,7 +1342,9 @@ class Runner:
                             core.switch_clip(self.static_post[self.clip_idx], 0)
                             self.set_state("STANDBY_POST", f"clip {clip.name} done at frame {r.frame}; policy keeps standing in the "
                                                            "last-frame pose (re-hoist before L2+B"
-                                                           + ("; L2+up = next clip" if self.clip_idx + 1 < len(self.clips) else "") + ")")
+                                                           + ('; R1+A = replay; switch-motion.sh = select' if self.bank else
+                                                              ('; R1+A = replay; L2+up = next clip' if self.clip_idx + 1 < len(self.clips) else
+                                                               '; R1+A = replay')) + ")")
             elif state == "END_HOLD":
                 T = a.end_blend_s
                 s = 1.0 if T <= 0 else float(np.clip(t_in / T, 0.0, 1.0))
@@ -1177,6 +1371,7 @@ class Runner:
                 if a.sim and a.sim_exit_after_damp is not None and t_start - auto_damp_t >= a.sim_exit_after_damp:
                     self.event("SIM", f"exit {a.sim_exit_after_damp} s after DAMP (--sim-exit-after-damp)")
                     self.stop.set()
+            self.gripper_tick(*gripper_context)
             compute_ms = (time.monotonic() - t_c0) * 1e3
 
             # --- record (50 Hz)
@@ -1188,6 +1383,10 @@ class Runner:
             R["action"].append(action); R["q_target"].append(q_t); R["n_clamped"].append(n_cl)
             R["cmd_kp_mean"].append(float(np.mean(self.cmd[1])))
             R["tilt_err"].append(tilt_err)
+            gp = self.gripper_playback
+            target = gp.target if gp is not None and self.state != 'DAMP' else None
+            R['gripper_frame'].append(gp.frame if target is not None else -1)
+            R['gripper_state'].append([-1, -1] if target is None else [int(s == 'closed') for s in target])
             R["temp"].append(st.temp.astype(np.float32))
             if self.sync_sock is not None:
                 # thermal stop: the stop reference has its own frame numbers -> the video freezes on the frame it left
@@ -1227,9 +1426,34 @@ class Runner:
         """Temperatures (29, 2) as the limit checks see them: raw minus the --temp-headroom of that sensor."""
         return temp - self.temp_hr
 
+    def temperature_limit_exceeded(self, st, limit: float) -> bool:
+        """Shared startup/start/warning limit; the full temperature override takes precedence."""
+        return not self.a.ignore_temperature_safety and bool(self.teff(st.temp)[self.live].max() > limit)
+
+    def check_temperature_damp(self, st) -> bool:
+        """Runtime maximum-temperature action; startup and controlled thermal stop are separate."""
+        if self.a.ignore_temperature_safety:
+            return False
+        temp = np.where(self.live[:, None], self.teff(st.temp), -np.inf)
+        if temp.max() <= self.a.max_temp:
+            self.overtemp_warned = False
+            return False
+        j, k = (int(x) for x in np.unravel_index(np.argmax(temp), temp.shape))
+        reason = (f'motor temperature {st.temp[j, k]:.0f} C on {self.cfg.joint_names[j]} sensor {k} > '
+                  f'{self.a.max_temp + self.temp_hr[j, k]:.0f} C')
+        if self.a.no_temperature_damp:
+            if not self.overtemp_warned:
+                self.event('WARN', reason + '; temperature DAMP disabled (--no-temperature-damp)')
+                self.overtemp_warned = True
+            return False
+        self.damp(reason)
+        return True
+
     def thermal_stop(self, core: DeployCore, clip, motor: int, temp: float, sensor: int = 0):
         """POLICY, a motor reached --thermal-stop-temp: hand the policy a reference that stops in --thermal-stop-pose."""
         a = self.a
+        if a.ignore_temperature_safety:
+            return
         frame = min(core.frame, core.clip.num_frames - 1)
         n = max(2, int(round(a.thermal_stop_s / self.cfg.control_dt)))
         target = self.static_pre[self.clip_idx] if a.thermal_stop_pose == "frame0" else static_clip(core.clip, frame)
@@ -1239,10 +1463,11 @@ class Runner:
         stop = thermal_stop_clip(core.clip, frame, target, n, self.cfg.control_dt)
         core.switch_clip(stop, 0)  # keeps observation history and last action
         self.thermal = {"frame": frame, "motor": motor, "temp": temp, "clip": stop}
+        maximum_action = ('temperature DAMP disabled' if a.no_temperature_damp else f'DAMP still at > {a.max_temp} C')
         self.event("WARN", f"THERMAL STOP: {self.cfg.joint_names[motor]} sensor {sensor} {temp:.0f} C >= "
                            f"{a.thermal_stop_temp + self.temp_hr[motor, sensor]:.0f} (--thermal-stop-temp + headroom) at "
                            f"frame {frame} of {clip.name}: policy stops in the {a.thermal_stop_pose} pose over {a.thermal_stop_s} s and keeps "
-                           f"standing (DAMP still at > {a.max_temp} C); then re-hoist and L2+B")
+                           f"standing ({maximum_action}); then re-hoist and L2+B")
 
     def temp_line(self, st) -> str:
         """Both sensors of the waist and hip motors, and the hottest live motor."""
@@ -1255,8 +1480,20 @@ class Runner:
         """R1+X: per live motor, T_now + max(heating rate over the STANDBY_PRE window, 0) * clip duration < --thermal-stop-temp.
         T = max of the two sensors; T_now = max over the last second (the readings are whole degrees)."""
         a = self.a
+        if a.ignore_temperature_safety:
+            return True, 'temperature safety disabled (--ignore-temperature-safety)'
         lim = a.thermal_stop_temp if a.thermal_stop_temp > 0 else a.max_temp
         h = list(self.temp_hist)
+        if a.ignore_heating_rate:
+            if not h:
+                return False, 'no current temperature sample available'
+            recent = np.array([values for t, values in h if t >= h[-1][0] - 1.0])
+            now = np.where(self.live, recent.max(0), -np.inf)
+            if not np.isfinite(now[self.live]).all():
+                return False, 'non-finite current motor temperature'
+            j = int(np.argmax(now))
+            return bool(now[j] < lim), (f'heating rate ignored (--ignore-heating-rate); current '
+                                       f'{self.cfg.joint_names[j]} {now[j]:.0f} C (limit {lim:.0f})')
         if not h or h[-1][0] - h[0][0] < a.temp_rate_min_s:
             span = h[-1][0] - h[0][0] if h else 0.0
             return False, f"heating rate needs >= {a.temp_rate_min_s:.0f} s of STANDBY_PRE (have {span:.1f} s)"
@@ -1272,7 +1509,7 @@ class Runner:
                f"(limit {lim:.0f}, rate over {t[-1] - t[0]:.0f} s)")
         return bool(pred[j] < lim), msg
 
-    def standby_allowed(self, t_in: float, st) -> tuple[bool, str]:
+    def standby_allowed(self, t_in: float, st, next_clip=None) -> tuple[bool, str]:
         """R1+X: STANDBY_PRE long enough and stable (tilt error vs the static reference, joint speed) over the last window."""
         a = self.a
         if not self.standby_ok[self.clip_idx]:
@@ -1296,9 +1533,9 @@ class Runner:
             return False, (f"standby max|dq| {dqm.max():.2f} rad/s over the last {a.standby_window_s} s >= {a.standby_max_dq} "
                            f"(now: {self.cfg.joint_names[j]} {adq[j]:.2f})")
         tm = float(self.teff(st.temp)[self.live].max())
-        if tm > a.warn_temp:
+        if self.temperature_limit_exceeded(st, a.warn_temp):
             return False, f"max motor temperature {tm:.0f} C > --warn-temp {a.warn_temp} (UNVERIFIED field semantics)"
-        tok, tmsg = self.temp_forecast(self.clips[self.clip_idx])
+        tok, tmsg = self.temp_forecast(next_clip if next_clip is not None else self.clips[self.clip_idx])
         if not tok:
             return False, tmsg
         if a.sim_band_file:
@@ -1356,7 +1593,8 @@ class Runner:
             "leg": (s["leg_over_t"] is not None and t - s["leg_over_t"] > a.warn_leg_dq_s,
                     f"leg |dq| > {a.warn_leg_dq} rad/s for > {a.warn_leg_dq_s} s (stepping?) -> re-hoist (gantry over the robot, take up "
                     "slack only), then L2+B"),
-            "temp": (tmax > a.warn_temp, f"max motor temperature {tmax:.0f} C > --warn-temp {a.warn_temp} (DAMP at {a.max_temp})"),
+            "temp": (self.temperature_limit_exceeded(st, a.warn_temp),
+                     f"max motor temperature {tmax:.0f} C > --warn-temp {a.warn_temp} (DAMP at {a.max_temp})"),
             "long": (t_in > a.standby_warn_s, f"{state} for {t_in:.0f} s > {a.standby_warn_s:.0f} s (documented standby cap: long "
                      "unsupported standby is unmeasured on the robot) -> start the motion or re-hoist"),
         }
@@ -1380,6 +1618,15 @@ class Runner:
             if state == "STANDBY_PRE":
                 ok, why = self.standby_allowed(t_in, st)
                 line += "; R1+X: " + ("would be ACCEPTED" if ok else f"would be refused ({why})")
+            elif self.switching is not None:
+                line += '; policy handoff in progress (L2+B remains active)'
+            else:
+                ok, why = self.standby_allowed(t_in, st)
+                if self.thermal is not None:
+                    ok, why = False, 'thermal stop; no rearming'
+                line += '; R1+A replay: ' + ('would be ACCEPTED' if ok else f'would be refused ({why})')
+                if self.bank:
+                    line += '; switch-motion.sh selects another motion'
             if warn_now:
                 line += "  WARN: " + ",".join(warn_now)
             self.printer.q.put(f"[{t - self.t0:8.3f}] STATUS: {line}\n")
@@ -1409,7 +1656,7 @@ class Runner:
         if tilt >= a.start_max_tilt_deg:
             return False, f"tilt vs clip frame 0 = {tilt:.1f} deg >= {a.start_max_tilt_deg}"
         tm = float(self.teff(st.temp)[self.live].max())
-        if tm > a.warn_temp:
+        if self.temperature_limit_exceeded(st, a.warn_temp):
             return False, f"max motor temperature {tm:.0f} C > --warn-temp {a.warn_temp} (UNVERIFIED field semantics)"
         if a.sim_band_file and a.sim_band_release_s >= 0:
             if self.band_off_t is None:
@@ -1489,6 +1736,12 @@ class Runner:
             "lock_waist": self.lock_waist, "locked_joints": np.nonzero(self.locked)[0].tolist(), "mode_machine": self.mm_latched,
             "t0_monotonic": self.t0, "end_hold_legacy": bool(a.end_hold_legacy),
             "io": "g1_bridge", "bridge": self.bridge_meta(), "ring_lost": int(self.ring_cur[1]),
+            "policy_bank": ({k: {"model": m.model, "clip": m.clip.name}
+                             for k, m in self.bank.motions.items()} if self.bank else None),
+            "gripper_events": ({str(p): tr.to_dict() for p, tr in
+                                zip(self.gripper_playback.paths, self.gripper_playback.tracks)
+                                if tr is not None} if self.gripper_playback is not None else {}),
+            "gripper_config": vars(self.gripper_config),
         }
         np.savez_compressed(path, **R, cmd_t=self.cl_t[idx], cmd_q=self.cl_q[idx], cmd_kp=self.cl_kp[idx],
                             cmd_kd=self.cl_kd[idx], cmd_state=self.cl_s[idx], meta=json.dumps(meta))
@@ -1677,6 +1930,19 @@ def main():
     ap.add_argument("--no-policy", action="store_true",
                     help="never start the policy (R1+A always refused): INTERP/HOLD/END tests only, e.g. the first powered run")
     ap.add_argument("--allow-ssh", action="store_true", help="domain 0: allow running from an ssh session (NOT recommended)")
+    ap.add_argument('--policy-bank', type=Path, default=None, help='preload a JSON motion/model bank for post-standby selection')
+    ap.add_argument('--policy-bank-root', type=Path, default=Path(__file__).resolve().parents[3] / 'deploy_artifacts')
+    ap.add_argument('--policy-control-socket', type=Path, default=None, help='local selection/status Unix socket (owner-only)')
+    ap.add_argument('--policy-switch-s', type=float, default=2.0, help='standing reference / policy handoff duration')
+    ap.add_argument('--no-grippers', action='store_true', help='ignore gripper sidecars; body-only playback')
+    calibration = Path(os.environ.get('G1_DEPLOY_HOME', gc.REPO.parent / 'g1_deploy')) / 'gripper_calibration.json'
+    ap.add_argument('--gripper-calibration', type=Path, default=calibration if calibration.is_file() else None,
+                    help='JSON with independent left/right open and closed encoder positions')
+    ap.add_argument('--gripper-open', type=float, default=None, help='override the open position for both hands [rad]')
+    ap.add_argument('--gripper-closed', type=float, default=None, help='override the closed position for both hands [rad]')
+    ap.add_argument('--gripper-kp', type=float, default=5.0)
+    ap.add_argument('--gripper-kd', type=float, default=0.05)
+    ap.add_argument('--gripper-wait-s', type=float, default=5.0, help='wait for both DEX1 feedback streams before body startup')
     # profile overrides (default: from --stage)
     ap.add_argument("--max-vel-frac", type=float, default=None)
     ap.add_argument("--max-abs-action", type=float, default=None)
@@ -1721,6 +1987,13 @@ def main():
                          "back to its frame-0 values (upright), or blend to the clip's frame-0 pose (frame0)")
     ap.add_argument("--temp-rate-window-s", type=float, default=20.0, help="R1+X forecast: heating-rate window (end of STANDBY_PRE) [s]")
     ap.add_argument("--temp-rate-min-s", type=float, default=10.0, help="R1+X forecast: minimum STANDBY_PRE samples span [s]")
+    ap.add_argument('--ignore-heating-rate', action='store_true',
+                    help='skip heating-rate prediction/history wait; retain current-temperature start limits and thermal stops')
+    ap.add_argument('--no-temperature-damp', action='store_true',
+                    help='warn instead of runtime DAMP above --max-temp; startup limits and controlled thermal stop remain')
+    ap.add_argument('--ignore-temperature-safety', action='store_true',
+                    help='disable all runner temperature checks, warnings, startup/start/switch limits, heating forecasts/history waits '
+                         'and thermal stops; keep temperature logging (robot firmware protections are unaffected)')
     ap.add_argument("--motor-error-mask", type=lambda s: int(s, 0), default=0xFFFFFFFF,
                     help="domain 0: DAMP if motorstate & mask != 0 (bit meanings UNVERIFIED; 0 disables)")
     ap.add_argument("--max-write-fail", type=int, default=10, help="consecutive failed rt/lowcmd writes -> DAMP")
@@ -1807,6 +2080,13 @@ def main():
     if a.auto_sequence and a.sim_exit_after_damp is None:
         a.sim_exit_after_damp = 1.0
 
+    if not np.isfinite(a.policy_switch_s) or a.policy_switch_s <= 0:
+        ap.error('--policy-switch-s must be positive and finite')
+    if a.policy_control_socket and not a.policy_bank:
+        ap.error('--policy-control-socket requires --policy-bank')
+    if a.policy_bank and (a.lock_waist or a.end_hold_legacy or a.auto_sequence):
+        ap.error('live policy switching requires manual STANDBY_POST control (no waist-lock, legacy end-hold or auto-sequence)')
+
     printer = Printer()
     r = Runner(a, printer)  # before redirecting stdout: a constructor error must reach the terminal
     sys.stdout = QueueStream(printer.q)
@@ -1881,6 +2161,10 @@ def main():
             r.watcher.close()
         if r.bridge is not None and not r.bridge.closed:
             r.bridge.quit()
+        if r.control is not None:
+            r.control.close()
+        if r.gripper_worker is not None:
+            r.gripper_worker.close()
         printer.close()
     os._exit(exit_code)
 

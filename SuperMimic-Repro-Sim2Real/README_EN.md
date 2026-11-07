@@ -81,6 +81,9 @@ MUJOCO_GL=egl uv run --with imageio --with imageio-ffmpeg python scripts/render_
   --ckpt <ckpt> --clips dance1_subject1 --seconds 30 --tag demo
 ```
 
+To author per-skill gripper open/close frames in a MuJoCo reference viewer, see
+[Tune gripper timing](docs/SIM2SIM.md#tune-gripper-timing-in-the-viewer).
+
 ## Real-robot deployment
 
 There are three steps:

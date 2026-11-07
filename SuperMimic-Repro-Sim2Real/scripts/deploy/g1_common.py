@@ -48,9 +48,10 @@ def waist_locked_values(st, idx=LOCKED_WAIST_IDX) -> str:
                      f"mstat=0x{int(st.motorstate[i]):x}" for i in idx)
 
 
-def waist_active(st, idx=LOCKED_WAIST_IDX) -> str | None:
-    """None if motors 13/14 look absent/locked (|q| <= WAIST_ACTIVE_Q, temperature 0), else a description."""
-    bad = [i for i in idx if not np.isfinite(st.q[i]) or abs(st.q[i]) > WAIST_ACTIVE_Q or np.any(st.temp[i] != 0)]
+def waist_active(st, idx=LOCKED_WAIST_IDX, *, check_temperature=True) -> str | None:
+    """None if motors 13/14 look locked; optionally omit the temperature-presence check."""
+    bad = [i for i in idx if not np.isfinite(st.q[i]) or abs(st.q[i]) > WAIST_ACTIVE_Q
+           or (check_temperature and np.any(st.temp[i] != 0))]
     return None if not bad else waist_locked_values(st, bad)
 
 

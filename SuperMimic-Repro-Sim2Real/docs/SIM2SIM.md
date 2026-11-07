@@ -2,6 +2,60 @@
 
 > 中文概览见 [README.md](../README.md)。English overview: [README_EN.md](../README_EN.md).
 
+## Tune gripper timing in the viewer
+
+Use the deploy Python environment and a desktop display:
+
+```bash
+source ../g1_deploy/env.sh
+python scripts/deploy/tune_grippers.py --skill pickup
+```
+
+The MuJoCo window shows the reference motion with a labeled marker at each wrist:
+green means **OPEN**, orange means **CLOSED**. The controls window lets you select
+any exported skill, play slowly, pause, scrub, step one frame, or jump to an event.
+The skill aliases come from `g1_deploy/motion_suite/motions.json` when available;
+other exported clips are listed by filename. Override `--policy-bank`,
+`--clips-dir` or `--scene` for another installation. Requires MuJoCo, NumPy and Tk
+(`import tkinter`); the training environment is not needed.
+
+1. Select a skill, pause at the grasp, and step to the desired frame.
+2. Click **Left open/closed** or **Right open/closed** to put an event at that frame.
+3. To move an event, select its row, edit the frame and click **Update selected**.
+   **Add / replace** inserts a separate event; **Delete selected** removes one.
+4. Replay the section, then click **Save this skill**. **Reload JSON** picks up
+   external edits. Unsaved changes remain in memory when switching skills; closing
+   asks whether to save them.
+
+In the 3D window, **P** plays/pauses, **Left/Right** steps, **Home** restarts,
+**S** saves the selected skill, and **R** reloads it. The event log records the
+exact frame when a commanded state changes. Events use **zero-based exported
+motion frames**, normally **50 fps**, including any standing lead-in or finish.
+They do not use source-video frame numbers.
+
+Each skill saves a sidecar next to its exported clip, e.g.
+`deploy_artifacts/clips/pickup_reference.grippers.json`:
+
+```json
+{
+  "left": [[0, "open"]],
+  "right": [[0, "open"], [120, "closed"], [300, "open"]]
+}
+```
+
+An event applies at its frame and holds until the next event. Each hand defaults
+to open before its first event. The editor rejects duplicate or out-of-range
+frames and states other than `open`/`closed`. A file is created only when saved.
+Sidecars live in the ignored `deploy_artifacts/` directory; copy them with the
+corresponding clip when moving your calibration to another machine.
+
+This is exact reference playback for timing authoring. The wrist markers represent
+commands; the fixed rubber hands have no simulated DEX1 joints or grasp contacts.
+The editor does not run a policy or connect to DDS. The bridge runner reads saved
+sidecars at startup and sends them to DEX1 during normal playback; see
+[DEX1 playback](DEPLOY_G1.md#dex1-gripper-playback). Physical closure delay must be
+calibrated separately.
+
 ## Exporting the deploy bundle
 
 Run this in the training environment. `onnxruntime` is not among the training dependencies; use `uv run --with onnxruntime`, or set `SM_ORT_OVERLAY=<a directory with onnxruntime installed>`:

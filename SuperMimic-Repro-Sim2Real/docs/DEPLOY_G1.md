@@ -6,7 +6,75 @@
 
 This document is the operating procedure for running this repository's tracking policies on a Unitree G1 29-DoF (EDU, low-level control in debug mode), written for the operator standing next to the robot. It was written while deploying on our own G1, and it keeps the checkpoint numbers of that time (the early e11 policy `ckpt_0116000`, etc.) and the measured numbers as the basis for each safety rule. Everything that has not been verified on the real robot is marked **UNVERIFIED** and collected in the [UNVERIFIED checklist](#unverified-checklist-confirm-each-item-before-going-on-the-robot) section. Facts that depend on your machine (`mode_machine`, network card, IP, whether the temperature thresholds are appropriate, etc.) must be re-confirmed one by one on your own robot before going on the robot.
 
-Overall flow:
+## DEX1 gripper playback
+
+The bridge runner automatically loads `<clip>.grippers.json` beside each clip,
+including clips in a live policy bank. After saving in the
+[timing editor](SIM2SIM.md#tune-gripper-timing-in-the-viewer), restart the runner
+and use your normal skill launch and controller buttons. Saved events are loaded
+once at startup; editing a file does not change an already-running session.
+Clips without a sidecar have no gripper targets. `--no-grippers` ignores all
+sidecars for body-only playback; the local `run-motion.sh` / `run-live.sh`
+launchers also accept this option.
+
+Both calibrated DEX1 hands must already be reporting
+`rt/dex1/{left,right}/state` through Unitree's
+[dex1_1_service](https://github.com/unitreerobotics/dex1_1_service). With saved
+events enabled, the runner checks that feedback before starting the body bridge.
+Missing feedback refuses startup, with no gripper motor commands sent. There are
+also no gripper commands while the runner is in PASSIVE.
+
+Use the robot's existing encoder calibration: the two hands can have different
+absolute offsets. The runner and local launchers automatically load
+`$G1_DEPLOY_HOME/gripper_calibration.json` when present, or accept
+`--gripper-calibration <path>`. The file contains separate `left` and `right`
+objects, each with numeric `open` and `closed` positions. The local profile is
+copied from PC2's existing Studio calibration: left **0.261613–5.600334 rad**,
+right **5.120029–10.500214 rad** (closed–open). This does not recalibrate motors.
+
+Without a profile, the generic Unitree endpoints are closed **0.0 rad**, open
+**5.4 rad** for both hands. `--gripper-open` and `--gripper-closed` explicitly
+override both hands. Startup refuses encoder feedback outside the configured
+range (with 0.3 rad tolerance), rather than driving against the wrong offset.
+Gains are `kp=5.0`, `kd=0.05`. The state remains binary; the worker limits the
+requested displacement from the measured position
+to 0.18 rad per command, as in Unitree's controller. This controls the motor
+position; it does not infer grasp success or measured jaw aperture.
+
+Playback uses the original clip's zero-based frame **before** the body policy
+advances it. A frame-189 event therefore fires at **3.78 s** on a 50 Hz clip.
+INTERP/HOLD/STANDBY_PRE use frame zero. STANDBY_POST uses the final frame. Replaying
+starts again at frame zero. Handoffs, END_HOLD and controlled thermal stops retain
+the last gripper target instead of following their synthetic body references.
+
+DEX1 publishing runs in its own process at 200 Hz to keep SDK callbacks out of
+the body policy process. DAMP is latched and clears gripper drive effort without
+commanding the jaws open. A missing parent heartbeat (>100 ms), stale gripper
+feedback (>250 ms), a failed write, or parent exit also releases drive effort.
+A worker fault makes the body runner enter DAMP. Unitree's service timeout remains
+the fallback if publication itself fails.
+
+`GRIPPER` events in the console identify the original clip frame and both states.
+The run NPZ records `gripper_frame`, `gripper_state` (`-1` inactive, `0` open,
+`1` closed), and the loaded schedules/calibration in its metadata. Worker errors
+are in the matching `run_*.dex1.txt` log.
+
+Offline validation (loopback DDS domain **83**, fake hands only):
+
+```bash
+python scripts/deploy/bridge/test_dex1.py
+```
+
+If startup reports no DEX1 feedback, inspect the service on the robot's **PC2**,
+not the external desktop. `systemctl status dex1_gripper.service` and
+`journalctl -u dex1_gripper.service -n 30 --no-pager` show startup failures.
+Repeated **No ttyUSB serial ports found** means PC2 cannot enumerate the gripper
+adapter: check its USB and power connections. Restarting the motion runner or
+increasing its feedback timeout cannot create a missing serial device.
+The current PC2 unit is enabled and retries automatically every five seconds.
+For a motion run that intentionally excludes grippers, use `--no-grippers`.
+
+## Overall flow
 
 ```
 training checkpoint (.pt) --export--> deploy_artifacts/<name>/{policy.onnx, deploy_config.json} + clips/<clip>.npz
@@ -488,6 +556,12 @@ Long motions (continuous dances of about 45 s) noticeably heat the hip, knee and
 | **R1+X temperature-rise forecast** | Limit `--thermal-stop-temp` 65 °C; slope window `--temp-rate-window-s` 20 s; at least `--temp-rate-min-s` 10 s of standby data | For every online motor (taking the larger of its two temperature sensors), extrapolate using the temperature slope over the last 20 s of STANDBY_PRE: `T_now + max(slope, 0) × clip duration` must be < 65 °C, otherwise `REFUSED` is printed. So **stand by for at least 10 s before pressing R1+X** |
 | **Smooth thermal stop** | Any online motor ≥ 65 °C in POLICY (`--thermal-stop-temp`, ≤ 0 disables it) | **Does not enter DAMP**: over `--thermal-stop-s` (1 s) the reference is blended from the current frame to a static reference, **the policy keeps balancing**, then STANDBY_POST is entered. After a thermal stop, going to the next clip is **not allowed** (L2+up is ignored); re-hang as in step 7 of the operator procedure, then press L2+B |
 | DAMP | `--max-temp` 80 °C | Enters DAMP in any state |
+
+`--ignore-heating-rate` skips the forecast and minimum temperature-history wait but still requires the current temperature to be below the thermal limit. `--no-temperature-damp` changes only the runtime maximum-temperature DAMP to a warning.
+
+`--ignore-temperature-safety` disables all temperature-based checks in the bridge runner: startup and post-confirmation limits, R1+A/R1+X and policy-switch/replay temperature gates, heating forecasts/history waits, controlled thermal stops, temperature warnings and temperature-triggered DAMP. It also skips the temperature-presence check on locked waist motors; their position check remains. Temperature readings still appear in logs and status. This flag takes precedence over the two narrower flags; other safety checks and robot firmware protections remain active. The runner will no longer intervene when motors overheat.
+
+The motion launcher accepts the same flag, for example `./g1_deploy/run-live.sh crunch --ignore-temperature-safety` from the policies directory. Append `--dry-run` to inspect the command without connecting to the robot. The flag is selected at process startup; it does not change an already running controller.
 
 `--thermal-stop-pose` determines the posture the thermal stop ends in:
 
