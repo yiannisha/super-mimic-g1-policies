@@ -1,0 +1,105 @@
+Nine motion selections using pretrained trackers
+
+No training or full simulation suite is part of this preparation.
+No robot-control process is launched during data preparation.
+
+List prepared assets:
+  /home/yiannis/policies/g1_deploy/run-motion.sh list
+
+Launch one physical test, when ready:
+  /home/yiannis/policies/g1_deploy/run-motion.sh idle
+  /home/yiannis/policies/g1_deploy/run-motion.sh itch
+  /home/yiannis/policies/g1_deploy/run-motion.sh clap
+  /home/yiannis/policies/g1_deploy/run-motion.sh walk-forward
+  /home/yiannis/policies/g1_deploy/run-motion.sh dance46
+  /home/yiannis/policies/g1_deploy/run-motion.sh dance22
+  /home/yiannis/policies/g1_deploy/run-motion.sh arms
+  /home/yiannis/policies/g1_deploy/run-motion.sh crunch
+  /home/yiannis/policies/g1_deploy/run-motion.sh pickup
+
+Run only one runner at a time. Default interface: eth0. Default stage: ground.
+Optional arguments: --iface eth0 --stage air|feet|slack|ground --dry-run
+--dry-run prints the command without starting DDS or motor commands.
+The launcher's READY status means assets are prepared and format-compatible;
+it is not a simulation/hardware success verdict.
+The runner retains its startup confirmation and existing built-in checks.
+
+Model map:
+  idle, walk-forward, clap, itch: released e11c_0220000 base
+  arms: same e11c_0220000 weights, custom IMG_3307 reference (461 frames, 9.20 s)
+  crunch: same e11c_0220000 weights, custom crouch reference (424 frames, 8.46 s)
+  pickup: same e11c_0220000 weights, custom reach/pickup reference (552 frames, 11.02 s)
+  dance46: e13i_0291000, rebuilt reference (2286 frames, 45.70 s)
+  dance22: e24_0355000, supplied reference (1097 frames, 21.92 s)
+The first four are trials of the released base model. The upstream physical
+examples used an earlier unreleased checkpoint; identical performance is
+not established. These are reference trajectories, not joystick steering.
+
+BONES-SEED data access, required for the first four:
+  1. Accept access at https://huggingface.co/datasets/bones-studio/seed
+  2. source /home/yiannis/policies/g1_deploy/env.sh
+  3. hf auth login
+  4. /home/yiannis/policies/g1_deploy/prepare-bones.sh
+The source is g1.tar.gz (about 23.5 GB decimal). The script reads it through
+resumable parallel HTTP ranges, extracts and converts only four selected
+CSVs, and stops fetching once all four have been found. It does not extract
+the whole dataset. Completed ranges are cached in downloads/bones-selected-ranges/. Authentication uses the local Hugging Face store;
+never put a token in this document or scripts.
+An existing authorized archive can be used with --archive /path/g1.tar.gz.
+Completed range files are retained for resumption. Each failed range is retried.
+Progress: logs/bones-parallel-prepare.log and logs/bones-range-status.json.
+Completion: logs/motion-suite-complete.json, followed by all six READY in
+run-motion.sh list. The Xet downloader was unreliable here and is no longer used.
+
+Reference preparation:
+  prepare_dance46.py uses the pinned upstream CPU converter, velocity capping
+  and concatenation recipe. The reconstructed reference is not bit-for-bit the
+  original reference; the upstream documentation explicitly describes this
+  reconstruction limitation (the source CSVs were resampled to 30 Hz).
+  common.py implements the 68-dimensional goal features with NumPy and the
+  checkpoint's default pose, avoiding a training-stack installation. Its
+  output was compared against the bundled dance22 table: max error 4.77e-7.
+  Pinned mjlab robot assets: 8bb2bc9e187797689ec82c78c35019afd2fd0376.
+
+Physical sequence after digital preparation:
+  Hoist supports robot; local operator has remote; area clear.
+  Start one selected runner and type yes.
+  L2+Up -> initial pose / HOLD; allow it to settle.
+  Before R1+A: feet flat and carrying most weight, tether just taut.
+  R1+A -> stationary policy standby.
+  Wait at least 10 s; require R1+X: would be ACCEPTED and stable behavior.
+  For motion, tether stays attached with the slack the motion needs.
+  R1+X -> selected reference playback.
+  After playback, STANDBY_POST keeps balancing. Move hoist overhead, take up
+  tether slack without dragging/lifting, then L2+B once supported, Ctrl+C.
+  DAMP is latched. Restart the program to leave it. Read refusal/abort reasons.
+  Do not raise temperature or motion thresholds to force past a fault.
+
+Sideways walking was removed from the plan. All six retained selections are
+prepared. The bulk archive cache was removed; the four selected raw CSVs,
+converted source references, deployment clips and all three models remain.
+
+Live switching and replay without restarting are described in LIVE_RUNNER.txt.
+Launch: ./run-live.sh idle --allow-ssh; select in POST from another terminal
+with ./switch-motion.sh itch. R1+A in POST rearms the current motion.
+
+Custom arms digital validation: ../../video_motion/work/skill/.
+Both nominal and 10 ms command-delay Unitree-model simulations completed
+with 0 falls/aborts and 10 s balanced standby before/after. Arm tracking RMS
+error was 0.0545 / 0.0554 rad. This result covers simulation; physical testing
+of this new reference is still pending. An already-running bank needs one
+restart to load arms, after which selection/replay works as usual.
+
+Custom crunch/pickup digital validation: ../../video_motion/work/new_clips/.
+Both latest videos were extracted concurrently on the GPU VM, without training.
+Natural standing transitions were retained; no synthetic transitions were added.
+Both completed nominal and 10 ms command-delay simulations, with zero falls or
+aborts and 10 seconds of unsupported standby before/after. Previews:
+  ../../video_motion/work/skills/crunch/crunch_policy_vs_reference.webm
+  ../../video_motion/work/skills/pickup/pickup_policy_vs_reference.webm
+The accepted field checks settled standby against the actual runner tilt/speed
+limits; the unchanged upstream whole-phase pass field includes handoff
+transients and is false. Full metrics and this distinction are in summary.json.
+Pickup's settled tilt error is close to the runner limit (7.97 vs 8 degrees).
+This is motion replay; pickup does not add grasping or object interaction logic.
+An existing live runner needs one restart to discover the new aliases.

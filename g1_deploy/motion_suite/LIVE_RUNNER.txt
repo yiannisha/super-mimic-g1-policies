@@ -1,0 +1,108 @@
+Live policy selection and replay
+
+Launch once, from /home/yiannis/policies/g1_deploy:
+  ./run-live.sh idle --allow-ssh
+(omit --allow-ssh when running locally)
+
+An already-running old runner must be stopped once to adopt this code. This
+setup change did not stop/start a controller or send any motor commands.
+Support the robot before stopping the old runner. Keep the existing tether
+and operator/remote arrangement for physical tests of the new handoffs.
+
+Initial flow is unchanged:
+  Type yes -> PASSIVE; L2+Up -> HOLD; with feet carrying weight R1+A ->
+  STANDBY_PRE; after the existing readiness checks R1+X -> playback ->
+  STANDBY_POST.
+
+In STANDBY_POST, from a second terminal on the SAME deployment computer:
+  ./switch-motion.sh status
+  ./switch-motion.sh itch
+  ./switch-motion.sh clap
+  ./switch-motion.sh walk-forward
+  ./switch-motion.sh dance46
+  ./switch-motion.sh dance22
+  ./switch-motion.sh idle
+  ./switch-motion.sh arms
+
+Selecting a motion, including the current one, begins a 2-second policy and
+standing-reference handoff, with no PASSIVE/HOLD/damping transition. Models
+and clips are preloaded before DDS starts; no model is loaded from disk in
+the active control loop. Robot constants and joint conventions must match.
+When the handoff finishes the state is STANDBY_PRE. Wait for the usual
+R1+X: would be ACCEPTED message, then R1+X starts the selected motion.
+Nothing starts playback automatically.
+
+Repeat the current motion without a terminal command:
+  In STANDBY_POST, press R1+A -> handoff back to its start -> STANDBY_PRE;
+  once ready, R1+X runs it again. This also works in the ordinary runner,
+  without --live. DAMP still requires restarting, as before.
+
+Selection/replay is refused in PASSIVE, INTERP, HOLD, STANDBY_PRE, POLICY,
+END_HOLD, DAMP, during a handoff, after thermal stop, or when existing
+standby stability/temperature checks fail. Rejected commands are NOT queued
+for later. A selection sent in the preceding state is rejected even if the
+runner receives it just after entering STANDBY_POST. Commands expire after
+one second. The post-motion readiness window starts fresh when POST begins.
+L2+B and all existing sensor/watchdog/temperature/overrun aborts remain active.
+
+The local control socket is /home/yiannis/policies/g1_deploy/control.sock,
+mode 0600, with an exclusive process lock. It is not a network service. The
+control client never creates a DDS publisher and may disconnect independently
+of the runner. Normal SSH disconnect handling of the runner is unchanged.
+L2+Up in POST does not select the next bank item; use the explicit selector.
+
+Bank aliases: idle, walk-forward, clap, itch, dance46, dance22, arms, crunch, pickup.
+The bank is fixed at startup. Changing the bank JSON requires one restart.
+The previous bank remains active until a handoff succeeds. A failure before
+acceptance leaves the current policy running. A core/watchdog fault during
+handoff still enters DAMP; this feature does not bypass existing aborts.
+
+Validation:
+- Focused offline tests cover state restrictions, replay, continuity/history,
+  duplicate/stale/malformed requests, socket ownership/exclusivity, thermal
+  refusal, and DAMP winning over a handoff.
+- All nine references and three ONNX models preload on this Jetson.
+- Nine inference-only handoffs spanning the three checkpoints measured a
+  worst p99 around 16.4 ms against the 20 ms policy period, with no aborts.
+- This is NOT physical balance validation. Different standing references and
+  blended models may still lose balance; new handoffs require physical testing.
+Results: ../logs/live-switch-tests.log and ../logs/live-switch-timing.json.
+
+Custom arms motion (IMG_3307):
+  ./run-live.sh arms --allow-ssh
+  Or, from STANDBY_POST in a runner started after adding arms:
+  ./switch-motion.sh arms
+This reference uses the existing e11c_0220000 weights. It includes 1-second
+standing segments and 1.5-second transitions around the recorded movement
+(461 frames, 9.20 seconds). Simulation with 0 and 10 ms command latency
+completed without falls or aborts, including 10 s PRE and 10 s POST.
+Policy/reference video and reports: ../../video_motion/work/skill/.
+The bank is preloaded at startup, so an existing runner needs one restart
+to discover the new alias. No controller was started/stopped during setup.
+
+Custom crouch and pickup motions:
+  ./run-live.sh crunch --allow-ssh
+  Or select from STANDBY_POST:
+  ./switch-motion.sh crunch
+  ./switch-motion.sh pickup
+Both reuse e11c_0220000 and retain the latest videos' natural transitions.
+They completed nominal and 10 ms command-delay simulation with zero falls or
+aborts. Pickup settles close to the 8-degree standby limit. Physical testing
+is pending; see ../../video_motion/work/new_clips/summary.json for metrics,
+including the distinction between settled-window acceptance and the stricter
+upstream whole-phase report. No runtime controller limits were changed.
+
+Optional startup temperature flags (both OFF by default):
+  ./run-live.sh idle --allow-ssh --ignore-heating-rate --no-temperature-damp
+These flags also work with run-motion.sh.
+
+--ignore-heating-rate skips the predicted end-of-clip temperature and the
+10-second rate-history wait. The current temperature must still be below
+the existing thermal-start limit (normally 65 C); the stability window remains.
+
+--no-temperature-damp changes the runtime --max-temp action (normally above
+80 C) from DAMP to a logged warning. The maximum-temperature startup refusals,
+70 C start warning limit, 65 C controlled thermal stop, and motor-error checks
+remain. A motor-driver fault may therefore still cause DAMP. This removes the
+runtime emergency temperature cutoff and can permit overheating. It is an
+explicit per-start option and is never enabled automatically.

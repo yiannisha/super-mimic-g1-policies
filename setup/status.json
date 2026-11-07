@@ -1,0 +1,26 @@
+{
+  "repository": "/home/yiannis/policies/Isaac-GR00T",
+  "commit": "7b304f95b95790490b79bd263ba57015c3c12dfd",
+  "hardware": "Jetson AGX Orin Developer Kit, 64 GB shared memory",
+  "installed_l4t": "35.4.1",
+  "required_l4t": "39.2.x (JetPack 7.2.x)",
+  "robot_from_operator_notes": {
+    "model": "G1_29",
+    "hands": "Dex1",
+    "robot_ip": "192.168.123.164",
+    "local_interface": "eth0",
+    "previous_local_ip": "192.168.123.99/24",
+    "workflow": "stationary"
+  },
+  "runtime_installed": false,
+  "robot_connection_verified": false,
+  "blockers": [
+    "JetPack upgrade requires local administrator access; sudo -n fails",
+    "No external boot media or NVMe detected",
+    "Current R35.4.1 is below R35.5 prerequisite for NVIDIA Jetson ISO route",
+    "Hugging Face model access not configured",
+    "Robot Ethernet carrier is 0"
+  ],
+  "upgrade_guide": "https://docs.nvidia.com/jetson/agx-orin-devkit/user-guide/latest/quick_start.html",
+  "backup_note": "Backups are on the same eMMC disk: copy them off this device before flashing."
+}

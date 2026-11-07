@@ -1,0 +1,47 @@
+{
+  "idle": {
+    "model": "e11c_0220000",
+    "clip": "neutral_idle_loop_001__A081",
+    "label": "Standing / neutral idle"
+  },
+  "walk-forward": {
+    "model": "e11c_0220000",
+    "clip": "walk_forward_stop_001__A026",
+    "label": "Walk forward and stop"
+  },
+  "clap": {
+    "model": "e11c_0220000",
+    "clip": "shoulder_clap_004__A041_M",
+    "label": "Shoulder clapping"
+  },
+  "itch": {
+    "model": "e11c_0220000",
+    "clip": "itching_left_arm_R_003__A121",
+    "label": "Itching left arm"
+  },
+  "dance46": {
+    "model": "e13i_0291000",
+    "clip": "combo_c4_full_vc_b15f20",
+    "label": "Rebuilt four-part dance (45.7 seconds)"
+  },
+  "dance22": {
+    "model": "e24_0355000",
+    "clip": "shanshen_duosuomao_lean35kfs_pad2",
+    "label": "Spin-and-jump dance (21.9 seconds)"
+  },
+  "arms": {
+    "model": "e11c_0220000",
+    "clip": "IMG_3307_arms_stand",
+    "label": "Custom two-arm movement (IMG_3307)"
+  },
+  "crunch": {
+    "model": "e11c_0220000",
+    "clip": "crunch_reference",
+    "label": "Custom crouch / squat (crunch.mp4)"
+  },
+  "pickup": {
+    "model": "e11c_0220000",
+    "clip": "pickup_reference",
+    "label": "Custom pickup gesture (pickup.mp4)"
+  }
+}

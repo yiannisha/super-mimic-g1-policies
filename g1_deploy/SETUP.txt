@@ -1,0 +1,101 @@
+SuperMimic deployment on this Jetson
+
+Community implementation: NJU-R-L-Group-Embodied-Lab/SuperMimic-Repro-Sim2Real
+This is not the original authors' released controller.
+Source: /home/yiannis/policies/SuperMimic-Repro-Sim2Real
+Environment and tools: /home/yiannis/policies/g1_deploy
+
+Activate in each terminal:
+  source /home/yiannis/policies/g1_deploy/env.sh
+  cd /home/yiannis/policies/SuperMimic-Repro-Sim2Real
+
+Installed: separate Python 3.10 conda environment, CPU ONNX Runtime 1.16.3,
+NumPy 1.26.4, MuJoCo, CycloneDDS 0.10.5 C library / 0.10.2 Python bindings,
+Unitree Python SDK and compiled ARM64 C++ bridge. No training environment.
+The bridge uses the Unitree C++ SDK's bundled DDS libraries via its rpath.
+Versions are recorded in requirements-lock.txt and source-versions.txt.
+
+Assets:
+  e24_0355000: complete release policy/config and matching 21.9-second clip
+    shanshen_duosuomao_lean35kfs_pad2. This is a specialized dance policy.
+  e13i_0291000: policy/config only; matching clip was not in its release archive.
+    Original policy preserved as policy_ir10.onnx; policy.onnx uses supplied IR9.
+Archives and upstream checksum lists are retained in downloads/.
+
+When the robot is powered on and connected:
+  /home/yiannis/policies/g1_deploy/check-robot.sh eth0
+This is read-only. Confirm received state, correct robot mode, and absence
+of competing lowcmd publishers. Follow the upstream docs/DEPLOY_G1.md for
+debug mode, remote stop test, hoist procedure, and actual commissioning.
+
+Suspended commissioning, INTERP/HOLD only (requires operator + hoist):
+  /home/yiannis/policies/g1_deploy/run-air.sh eth0
+The runner retains its startup confirmation. L2+up interpolates to frame 0;
+L2+B enters damping. Do not enable policy standby or motion while suspended.
+Over SSH, append --allow-ssh only after reading the upstream SSH stop rules.
+
+The e24 dance itself is documented for ground stage with tether attached.
+Do not assume it passes the stricter slack-stage limits. See:
+  docs/REAL_ROBOT_LEAN35KFS.md
+  docs/DEPLOY_G1.md
+Keep the default thermal limits; upstream's raised limits are unverified.
+
+Offline checks:
+  python /home/yiannis/policies/g1_deploy/benchmark.py
+  /home/yiannis/policies/g1_deploy/run-simulation-checks.sh
+Results: logs/ and the repository's deploy_artifacts/reports/.
+DDS tests use localhost domains 1/2, never the real robot's domain 0.
+
+Compatibility notes:
+- ONNX Runtime 1.23.2 crashed on import on this Jetson; 1.16.3 works.
+- Unitree Python SDK is editable because its wheel omits the native CRC .so.
+  Keep /home/yiannis/unitree_sdk2_python in place.
+- The bridge fixture test has a local warmup wait for five corrupt packets;
+  its original CRC assertions are unchanged. This accommodates ARM fixture rate.
+- CPU governor is schedutil, eight CPU cores online. No power modes changed.
+- Real-time scheduling privileges are unavailable; verify on-robot timing.
+- The robot was off throughout setup; hardware commissioning is outstanding.
+
+Headless end-to-end run (simulated robot, DDS domain 1, localhost):
+  /home/yiannis/policies/g1_deploy/run-sim.sh
+Run with the machine otherwise idle. This wrapper auto-starts simulation only.
+Simulation console: deploy_logs/sim_e2e/local_e24_auto/runner.log
+
+Validation results (2026-11-05):
+- Both release archive SHA-256 checks passed.
+- pip check passed. Runtime imports and runner --help passed.
+- Seven IMU unit tests passed.
+- ARM64 bridge test: ALL PASS after fixture warmup adjustment.
+- ONNX inference: both models return finite 29-joint actions; 1000 measured
+  samples each. e24 p99 11.33 ms, e13 p99 13.98 ms under concurrent CPU load,
+  against a 20 ms policy period. See logs/inference-benchmark.json.
+- e24 full real-model G2 grid: 36 ground runs, zero falls and zero aborts.
+  G3 ground transitions: 3/3 complete, zero aborts. Slack profile fails knee
+  velocity limits. Overall report therefore says FAIL; do not call it a full
+  gate pass. Same-model training parity was not rerun (needs training setup).
+- End-to-end DDS simulator did NOT pass: its Python simulator runs at 0.14x
+  real time here, and the runner entered damping in STANDBY_PRE. Treat this
+  simulator as unsuitable for wall-clock controller validation on this host.
+  This does not establish real-robot failure or readiness. Use a faster
+  simulator host / optimize the simulator before relying on a full DDS test.
+- All controller/simulator processes were stopped after testing.
+
+Hardware acceptance still required with G1 powered on: received state/rate,
+correct mode and no competing publisher, remote stop, bridge watchdog on
+actual hardware, suspended interpolation/HOLD, thermal readings, and real
+control-loop timing. Read the upstream operator procedure before motion.
+
+Slow DDS simulator investigation:
+The same Unitree G1 MJCF without DDS ran 1500 physics/PD steps (3 simulated
+seconds) in 0.238 s compute: 12.59x unpaced real time, p99 step 0.359 ms.
+This was a simple held-pose benchmark, not the entire dance. Combined with
+working 50 Hz inference and 500 Hz C++ bridge tests, it points to the Python
+DDS simulator integration/threads rather than insufficient raw physics
+compute. Individual callback/GIL/logging costs have not yet been profiled.
+See logs/physics-benchmark.json. Hardware timing still needs acceptance.
+
+Direct nominal standby gate also passed: ground, zero delay, nominal gains,
+no added torso mass, friction 1.0. Completed 60 s PRE + dance + 30 s POST,
+zero falls/aborts, PRE/POST tilt error maxima 2.61/2.53 degrees. This is one
+nominal test, not the full standby perturbation grid. Its success without
+Python DDS supports the simulator-integration bottleneck diagnosis.
