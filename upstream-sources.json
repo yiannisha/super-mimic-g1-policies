@@ -1,0 +1,52 @@
+{
+  "sources": [
+    {
+      "path": "Isaac-GR00T",
+      "url": "https://github.com/NVIDIA/Isaac-GR00T.git",
+      "commit": "7b304f95b95790490b79bd263ba57015c3c12dfd",
+      "integration": "submodule"
+    },
+    {
+      "path": "SuperMimic-Repro-Sim2Real",
+      "url": "https://github.com/NJU-R-L-Group-Embodied-Lab/SuperMimic-Repro-Sim2Real.git",
+      "commit": "f8f60d7bbdba68468c050ef100af02d752ca238e",
+      "integration": "source snapshot"
+    },
+    {
+      "path": "g1_deploy/unitree_sdk2",
+      "url": "https://github.com/unitreerobotics/unitree_sdk2.git",
+      "commit": "8e1b927586712edd6a4c29d50dd52dff1e163439",
+      "integration": "submodule"
+    },
+    {
+      "path": "g1_deploy/mjlab-assets",
+      "url": "https://github.com/mujocolab/mjlab.git",
+      "commit": "8bb2bc9e187797689ec82c78c35019afd2fd0376",
+      "integration": "submodule"
+    },
+    {
+      "path": "g1_deploy/unitree_mujoco",
+      "url": "https://github.com/unitreerobotics/unitree_mujoco.git",
+      "commit": "1eb6642e3f3fdfb7fb13a9794fd6a2dd93ea0e7d",
+      "integration": "submodule"
+    },
+    {
+      "path": "video_motion/GMR",
+      "url": "https://github.com/YanjieZe/GMR.git",
+      "commit": "25f56db79ac411258b377b6d4ccba0c8ff3372ac",
+      "integration": "submodule"
+    },
+    {
+      "path": "video_motion/GVHMR",
+      "url": "https://github.com/zju3dv/GVHMR.git",
+      "commit": "ee960bb6e2ea2d381aa97f08e9b71ef320b624b1",
+      "integration": "source snapshot"
+    },
+    {
+      "path": "video_motion/pytorch3d",
+      "url": "https://github.com/facebookresearch/pytorch3d.git",
+      "commit": "f34104cf6ebefacd7b7e07955ee7aaa823e616ac",
+      "integration": "submodule"
+    }
+  ]
+}

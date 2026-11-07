@@ -1,0 +1,22 @@
+[submodule "Isaac-GR00T"]
+	path = Isaac-GR00T
+	url = https://github.com/NVIDIA/Isaac-GR00T.git
+[submodule "g1_deploy/unitree_sdk2"]
+	path = g1_deploy/unitree_sdk2
+	url = https://github.com/unitreerobotics/unitree_sdk2.git
+[submodule "g1_deploy/mjlab-assets"]
+	path = g1_deploy/mjlab-assets
+	url = https://github.com/mujocolab/mjlab.git
+[submodule "g1_deploy/unitree_mujoco"]
+	path = g1_deploy/unitree_mujoco
+	url = https://github.com/unitreerobotics/unitree_mujoco.git
+[submodule "video_motion/GMR"]
+	path = video_motion/GMR
+	url = https://github.com/YanjieZe/GMR.git
+	ignore = untracked
+[submodule "video_motion/pytorch3d"]
+	path = video_motion/pytorch3d
+	url = https://github.com/facebookresearch/pytorch3d.git
+[submodule "video_motion/GVHMR/third-party/DPVO"]
+	path = video_motion/GVHMR/third-party/DPVO
+	url = https://github.com/princeton-vl/DPVO.git

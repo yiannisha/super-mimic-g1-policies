@@ -1,0 +1,40 @@
+# Python environments, caches, and native build products.
+.venv/
+venv/
+env/
+*_env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+build/
+dist/
+*.so
+*.o
+
+# Local credentials and runtime state.
+.env
+.env.*
+*.pem
+*.key
+*.sock
+*.sock.lock
+*.pid
+.DS_Store
+
+# Installed dependencies, downloads, backups, and generated run outputs.
+/g1_deploy/cyclonedds/
+/g1_deploy/cyclonedds-build/
+/g1_deploy/downloads/
+/g1_deploy/logs/
+/g1_deploy/motion_suite/catalog/
+/setup/downloads/
+/setup/logs/
+/setup/backups/*.tar.gz
+/video_motion/models/
+/video_motion/work/
+/video_motion/logs/
+/video_motion/inputs/
+/SuperMimic-Repro-Sim2Real/scripts/deploy/bridge/g1_bridge
