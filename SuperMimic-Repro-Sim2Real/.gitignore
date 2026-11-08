@@ -14,8 +14,12 @@ wandb/
 .ruff_cache/
 experiments/**/outputs/
 
-# Deploy bundles, robot logs, videos (published as release assets, not tracked)
-deploy_artifacts/
+# Keep deployment references in the repository; policy bundles remain release assets.
+deploy_artifacts/*
+!deploy_artifacts/clips/
+!deploy_artifacts/clips/*.npz
+!deploy_artifacts/clips/*.grippers.json
+# Robot logs and generated videos.
 deploy_logs/
 videos*/
 *.mp4

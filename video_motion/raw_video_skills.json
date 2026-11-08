@@ -1,0 +1,2019 @@
+{
+  "source_directory": "raw_videos",
+  "normalization": "ffmpeg autorotation from display matrix; fps=30; libx264 crf=17; no audio",
+  "extraction": {
+    "host": "cp-g4x8-cud",
+    "zone": "us-west4-a",
+    "project": "project-512201fe-6308-4879-83c",
+    "environment": "~/policies/video_motion/env",
+    "gpus": [
+      1,
+      2
+    ],
+    "static_camera": true,
+    "pretrained_weights": true
+  },
+  "simulation_only": true,
+  "physical_testing": "pending",
+  "gripper_events": "Not inferred; these skills replay body motion. Object sensing, contact, and grasp success are not evaluated.",
+  "acceptance": "Existing evaluate_skill.py: complete, upright, zero aborts, settled standby within runner limits, smooth handoffs, all motion steps, all-joint RMSE < 0.20 rad, at both 0 and 10 ms delay.",
+  "clips": {
+    "open_door_1": {
+      "source": "raw_videos/open_door_1.mp4",
+      "source_sha256": "f438bd71dd1c13defa63ce29dec0271d00048af47222c94382b10620be986831",
+      "normalized_sha256": "54ac88f061d44b6167b3c27cc496f0c1c359a9251ea653d588fce83bcc96075a",
+      "clip": "open_door_1",
+      "model": "e11c_0220000",
+      "frames": 501,
+      "duration_s": 10.0,
+      "transitions": "none",
+      "original_motion_preserved": true,
+      "artifact": "SuperMimic-Repro-Sim2Real/deploy_artifacts/clips/open_door_1.npz",
+      "artifact_sha256": "800b5928cbe662161093e038f4931f94c86f68c84729fbd58d044145c972fbb5",
+      "simulation_status": "validated",
+      "validation_issues": {},
+      "simulations": {
+        "0": {
+          "accepted": true,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 5.560922670803218,
+          "standby_settled_max_dq": 0.01080622370250913,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 500,
+            "all_joint_rmse_rad": 0.07980467896288503,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.07980467896288503,
+            "expected_steps": 500,
+            "arms_rmse_rad": 0.09542382700146658,
+            "arms_max_abs_error_rad": 0.36982155727504573
+          }
+        },
+        "10": {
+          "accepted": true,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 5.564162704199817,
+          "standby_settled_max_dq": 0.011675458539748563,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 500,
+            "all_joint_rmse_rad": 0.07987363249346248,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.07987363249346248,
+            "expected_steps": 500,
+            "arms_rmse_rad": 0.09556244860106222,
+            "arms_max_abs_error_rad": 0.36753239437725127
+          }
+        }
+      },
+      "attempted_trackers": {
+        "e11c_0220000": {
+          "0": {
+            "accepted": true,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 5.560922670803218,
+            "standby_settled_max_dq": 0.01080622370250913,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 500,
+              "all_joint_rmse_rad": 0.07980467896288503,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.07980467896288503,
+              "expected_steps": 500,
+              "arms_rmse_rad": 0.09542382700146658,
+              "arms_max_abs_error_rad": 0.36982155727504573
+            }
+          },
+          "10": {
+            "accepted": true,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 5.564162704199817,
+            "standby_settled_max_dq": 0.011675458539748563,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 500,
+              "all_joint_rmse_rad": 0.07987363249346248,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.07987363249346248,
+              "expected_steps": 500,
+              "arms_rmse_rad": 0.09556244860106222,
+              "arms_max_abs_error_rad": 0.36753239437725127
+            }
+          }
+        }
+      },
+      "preview": "video_motion/work/raw_batch/skills/open_door_1/open_door_1_policy_vs_reference.webm"
+    },
+    "open_door_2": {
+      "source": "raw_videos/open_door_2.mp4",
+      "source_sha256": "8588a8d9ef493aa6ede461858a020ae724f4bfb754b5706a79e712bc914fb240",
+      "normalized_sha256": "74b8830f43966eaf9b577dd81b1a794f896809c9a496fa5c9938ba47d6aa5ee8",
+      "clip": "open_door_2",
+      "model": "e11c_0220000",
+      "frames": 422,
+      "duration_s": 8.42,
+      "transitions": "none",
+      "original_motion_preserved": true,
+      "artifact": "SuperMimic-Repro-Sim2Real/deploy_artifacts/clips/open_door_2.npz",
+      "artifact_sha256": "e8ccd052900e07721b61f204fd5c1680de9226785764f19a33d244adc4604f66",
+      "simulation_status": "validated",
+      "validation_issues": {},
+      "simulations": {
+        "0": {
+          "accepted": true,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 5.595741590625437,
+          "standby_settled_max_dq": 0.016838476542320815,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 421,
+            "all_joint_rmse_rad": 0.08962843410670522,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.08962843410670522,
+            "expected_steps": 421,
+            "arms_rmse_rad": 0.10227846865652258,
+            "arms_max_abs_error_rad": 0.4101927100065116
+          }
+        },
+        "10": {
+          "accepted": true,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 5.693759411459928,
+          "standby_settled_max_dq": 0.018367534030412285,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 421,
+            "all_joint_rmse_rad": 0.08922696215388692,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.08922696215388692,
+            "expected_steps": 421,
+            "arms_rmse_rad": 0.10224825116180011,
+            "arms_max_abs_error_rad": 0.40676632637439336
+          }
+        }
+      },
+      "attempted_trackers": {
+        "e11c_0220000": {
+          "0": {
+            "accepted": true,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 5.595741590625437,
+            "standby_settled_max_dq": 0.016838476542320815,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 421,
+              "all_joint_rmse_rad": 0.08962843410670522,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.08962843410670522,
+              "expected_steps": 421,
+              "arms_rmse_rad": 0.10227846865652258,
+              "arms_max_abs_error_rad": 0.4101927100065116
+            }
+          },
+          "10": {
+            "accepted": true,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 5.693759411459928,
+            "standby_settled_max_dq": 0.018367534030412285,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 421,
+              "all_joint_rmse_rad": 0.08922696215388692,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.08922696215388692,
+              "expected_steps": 421,
+              "arms_rmse_rad": 0.10224825116180011,
+              "arms_max_abs_error_rad": 0.40676632637439336
+            }
+          }
+        }
+      },
+      "preview": "video_motion/work/raw_batch/skills/open_door_2/open_door_2_policy_vs_reference.webm"
+    },
+    "open_door_3": {
+      "source": "raw_videos/open_door_3.mp4",
+      "source_sha256": "30f583bb7a019d240f4da0c7f8c02652c910e1ab6d4f20e80abdf914d8ca6bec",
+      "normalized_sha256": "c25054c0e36519e31efd1d995df9b70a1f5a646d0157e82fc40831e6e28c89fd",
+      "clip": "open_door_3",
+      "model": "e11c_0220000",
+      "frames": 314,
+      "duration_s": 6.26,
+      "transitions": "none",
+      "original_motion_preserved": true,
+      "artifact": "SuperMimic-Repro-Sim2Real/deploy_artifacts/clips/open_door_3.npz",
+      "artifact_sha256": "051793de3c9a9ae5439aece40099b7d151df2d074e6d97f340739ddf87982f24",
+      "simulation_status": "validated",
+      "validation_issues": {},
+      "simulations": {
+        "0": {
+          "accepted": true,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 6.059728933867674,
+          "standby_settled_max_dq": 0.018389409030648934,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 313,
+            "all_joint_rmse_rad": 0.09722413219573153,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.09722413219573153,
+            "expected_steps": 313,
+            "arms_rmse_rad": 0.10499927406294929,
+            "arms_max_abs_error_rad": 0.3780619191293959
+          }
+        },
+        "10": {
+          "accepted": true,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 6.037855014925376,
+          "standby_settled_max_dq": 0.02030679271173026,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 313,
+            "all_joint_rmse_rad": 0.0975043691171026,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.0975043691171026,
+            "expected_steps": 313,
+            "arms_rmse_rad": 0.10512035377679148,
+            "arms_max_abs_error_rad": 0.37671160483471705
+          }
+        }
+      },
+      "attempted_trackers": {
+        "e11c_0220000": {
+          "0": {
+            "accepted": true,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 6.059728933867674,
+            "standby_settled_max_dq": 0.018389409030648934,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 313,
+              "all_joint_rmse_rad": 0.09722413219573153,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.09722413219573153,
+              "expected_steps": 313,
+              "arms_rmse_rad": 0.10499927406294929,
+              "arms_max_abs_error_rad": 0.3780619191293959
+            }
+          },
+          "10": {
+            "accepted": true,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 6.037855014925376,
+            "standby_settled_max_dq": 0.02030679271173026,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 313,
+              "all_joint_rmse_rad": 0.0975043691171026,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.0975043691171026,
+              "expected_steps": 313,
+              "arms_rmse_rad": 0.10512035377679148,
+              "arms_max_abs_error_rad": 0.37671160483471705
+            }
+          }
+        }
+      },
+      "preview": "video_motion/work/raw_batch/skills/open_door_3/open_door_3_policy_vs_reference.webm"
+    },
+    "pickup_box_1": {
+      "source": "raw_videos/pickup_box_1.mp4",
+      "source_sha256": "8423b9fe16e19fcad54dd85aad42fdb90099b7db6989e3bd1e61042fa52dac3e",
+      "normalized_sha256": "54c087c6e7e427603b0d97a812c1443fb4a895a4c8557480cadafa8285af65b8",
+      "clip": "pickup_box_1",
+      "model": "e24_0355000",
+      "frames": 687,
+      "duration_s": 13.72,
+      "transitions": "standing",
+      "original_motion_preserved": true,
+      "artifact": "SuperMimic-Repro-Sim2Real/deploy_artifacts/clips/pickup_box_1.npz",
+      "artifact_sha256": "cb20fd6a4bc07b0fda319d91a85f55185110805a098cb860ee34bb834adcc8d3",
+      "simulation_status": "validated",
+      "validation_issues": {},
+      "simulations": {
+        "0": {
+          "accepted": true,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 2.5604605773129667,
+          "standby_settled_max_dq": 0.011563297056340233,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 437,
+            "all_joint_rmse_rad": 0.15896877692681696,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.15896877692681696,
+            "expected_steps": 437,
+            "arms_rmse_rad": 0.19073715791085796,
+            "arms_max_abs_error_rad": 0.5817330179042304
+          }
+        },
+        "10": {
+          "accepted": true,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 2.3884812649810914,
+          "standby_settled_max_dq": 0.012128101840280322,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 437,
+            "all_joint_rmse_rad": 0.16241553729439964,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.16241553729439964,
+            "expected_steps": 437,
+            "arms_rmse_rad": 0.19619114215871758,
+            "arms_max_abs_error_rad": 0.5938570011205462
+          }
+        }
+      },
+      "attempted_trackers": {
+        "e11c_0220000": {
+          "0": {
+            "accepted": false,
+            "completed": false,
+            "upright": false,
+            "aborts": 0,
+            "fall_phase": "policy",
+            "fall_s": 19.097,
+            "standby_ready": false,
+            "r1x_never": false,
+            "smooth": false,
+            "standby_settled_max_tilt_err_deg": null,
+            "standby_settled_max_dq": null,
+            "pass": false,
+            "tracking": {
+              "gesture_steps": 80,
+              "all_joint_rmse_rad": 0.0646405174348733,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.0646405174348733,
+              "expected_steps": 437,
+              "arms_rmse_rad": 0.0606397568789983,
+              "arms_max_abs_error_rad": 0.16224181620849382
+            }
+          },
+          "10": {
+            "accepted": false,
+            "completed": false,
+            "upright": false,
+            "aborts": 0,
+            "fall_phase": "policy",
+            "fall_s": 19.137,
+            "standby_ready": false,
+            "r1x_never": false,
+            "smooth": false,
+            "standby_settled_max_tilt_err_deg": null,
+            "standby_settled_max_dq": null,
+            "pass": false,
+            "tracking": {
+              "gesture_steps": 82,
+              "all_joint_rmse_rad": 0.06909442198669959,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.06909442198669959,
+              "expected_steps": 437,
+              "arms_rmse_rad": 0.06260260505152089,
+              "arms_max_abs_error_rad": 0.1637988693810604
+            }
+          }
+        },
+        "e24_0355000": {
+          "0": {
+            "accepted": true,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 2.5604605773129667,
+            "standby_settled_max_dq": 0.011563297056340233,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 437,
+              "all_joint_rmse_rad": 0.15896877692681696,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.15896877692681696,
+              "expected_steps": 437,
+              "arms_rmse_rad": 0.19073715791085796,
+              "arms_max_abs_error_rad": 0.5817330179042304
+            }
+          },
+          "10": {
+            "accepted": true,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 2.3884812649810914,
+            "standby_settled_max_dq": 0.012128101840280322,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 437,
+              "all_joint_rmse_rad": 0.16241553729439964,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.16241553729439964,
+              "expected_steps": 437,
+              "arms_rmse_rad": 0.19619114215871758,
+              "arms_max_abs_error_rad": 0.5938570011205462
+            }
+          }
+        }
+      },
+      "preview": "video_motion/work/raw_batch/skills/pickup_box_1/pickup_box_1_policy_vs_reference.webm"
+    },
+    "pickup_box_2": {
+      "source": "raw_videos/pickup_box_2.mp4",
+      "source_sha256": "66c1a09ccb2221ee3bfcc04c606eaf16f2056673964523c61411244fdaa059f7",
+      "normalized_sha256": "7c9c3fe8dbd95dd382e3d99b733d31ee752ac00ad06fbe11b1e0e1368ff738ba",
+      "clip": "pickup_box_2",
+      "model": "e11c_0220000",
+      "frames": 551,
+      "duration_s": 11.0,
+      "transitions": "standing",
+      "original_motion_preserved": true,
+      "artifact": "SuperMimic-Repro-Sim2Real/deploy_artifacts/clips/pickup_box_2.npz",
+      "artifact_sha256": "40622ef5bf5efd10f726abb47939286a0ddd73b5cf54538d37a2ec7687f470a4",
+      "simulation_status": "simulation_failed",
+      "validation_issues": {
+        "0": "fall during policy",
+        "10": "fall during policy"
+      },
+      "simulations": {
+        "0": {
+          "accepted": false,
+          "completed": false,
+          "upright": false,
+          "aborts": 0,
+          "fall_phase": "policy",
+          "fall_s": 18.98,
+          "standby_ready": false,
+          "r1x_never": false,
+          "smooth": false,
+          "standby_settled_max_tilt_err_deg": null,
+          "standby_settled_max_dq": null,
+          "pass": false,
+          "tracking": {
+            "gesture_steps": 74,
+            "all_joint_rmse_rad": 0.06007484308415906,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.06007484308415906,
+            "expected_steps": 301,
+            "arms_rmse_rad": 0.06808118861590143,
+            "arms_max_abs_error_rad": 0.14880227068101448
+          }
+        },
+        "10": {
+          "accepted": false,
+          "completed": false,
+          "upright": false,
+          "aborts": 0,
+          "fall_phase": "policy",
+          "fall_s": 18.95,
+          "standby_ready": false,
+          "r1x_never": false,
+          "smooth": false,
+          "standby_settled_max_tilt_err_deg": null,
+          "standby_settled_max_dq": null,
+          "pass": false,
+          "tracking": {
+            "gesture_steps": 73,
+            "all_joint_rmse_rad": 0.061128511076678965,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.061128511076678965,
+            "expected_steps": 301,
+            "arms_rmse_rad": 0.06972506334460592,
+            "arms_max_abs_error_rad": 0.15269654180553863
+          }
+        }
+      },
+      "attempted_trackers": {
+        "e11c_0220000": {
+          "0": {
+            "accepted": false,
+            "completed": false,
+            "upright": false,
+            "aborts": 0,
+            "fall_phase": "policy",
+            "fall_s": 18.98,
+            "standby_ready": false,
+            "r1x_never": false,
+            "smooth": false,
+            "standby_settled_max_tilt_err_deg": null,
+            "standby_settled_max_dq": null,
+            "pass": false,
+            "tracking": {
+              "gesture_steps": 74,
+              "all_joint_rmse_rad": 0.06007484308415906,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.06007484308415906,
+              "expected_steps": 301,
+              "arms_rmse_rad": 0.06808118861590143,
+              "arms_max_abs_error_rad": 0.14880227068101448
+            }
+          },
+          "10": {
+            "accepted": false,
+            "completed": false,
+            "upright": false,
+            "aborts": 0,
+            "fall_phase": "policy",
+            "fall_s": 18.95,
+            "standby_ready": false,
+            "r1x_never": false,
+            "smooth": false,
+            "standby_settled_max_tilt_err_deg": null,
+            "standby_settled_max_dq": null,
+            "pass": false,
+            "tracking": {
+              "gesture_steps": 73,
+              "all_joint_rmse_rad": 0.061128511076678965,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.061128511076678965,
+              "expected_steps": 301,
+              "arms_rmse_rad": 0.06972506334460592,
+              "arms_max_abs_error_rad": 0.15269654180553863
+            }
+          }
+        },
+        "e24_0355000": {
+          "0": {
+            "accepted": false,
+            "completed": false,
+            "upright": false,
+            "aborts": 0,
+            "fall_phase": "policy",
+            "fall_s": 19.253,
+            "standby_ready": false,
+            "r1x_never": false,
+            "smooth": false,
+            "standby_settled_max_tilt_err_deg": null,
+            "standby_settled_max_dq": null,
+            "pass": false,
+            "tracking": {
+              "gesture_steps": 88,
+              "all_joint_rmse_rad": 0.1141757284292841,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.1141757284292841,
+              "expected_steps": 301,
+              "arms_rmse_rad": 0.12142222797587324,
+              "arms_max_abs_error_rad": 0.34097062977863346
+            }
+          }
+        },
+        "e13i_0291000": {
+          "0": {
+            "accepted": false,
+            "completed": false,
+            "upright": false,
+            "aborts": 0,
+            "fall_phase": "policy",
+            "fall_s": 18.966,
+            "standby_ready": false,
+            "r1x_never": false,
+            "smooth": false,
+            "standby_settled_max_tilt_err_deg": null,
+            "standby_settled_max_dq": null,
+            "pass": false,
+            "tracking": {
+              "gesture_steps": 74,
+              "all_joint_rmse_rad": 0.08851989380620297,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.08851989380620297,
+              "expected_steps": 301,
+              "arms_rmse_rad": 0.10376838945490957,
+              "arms_max_abs_error_rad": 0.3124439340492994
+            }
+          }
+        }
+      },
+      "preview": "video_motion/work/raw_batch/skills/pickup_box_2/pickup_box_2_policy_vs_reference.webm"
+    },
+    "pickup_box_3": {
+      "source": "raw_videos/pickup_box_3.mp4",
+      "source_sha256": "9bf2c8b6016c1f35450e65b45ab48ccb6c4ae3bbc86c234341c5d18ccc53d1e1",
+      "normalized_sha256": "ebdd9a0bc59640b81d8a8ddb761d2843db426dddebd70668a013d57a70ca404c",
+      "clip": "pickup_box_3",
+      "model": "e24_0355000",
+      "frames": 809,
+      "duration_s": 16.16,
+      "transitions": "standing",
+      "original_motion_preserved": true,
+      "artifact": "SuperMimic-Repro-Sim2Real/deploy_artifacts/clips/pickup_box_3.npz",
+      "artifact_sha256": "689cc37e8ed0ab97ef833d4beb7e6ff9bba2aa2995b9a336f3e9b6ca681f39d4",
+      "simulation_status": "simulation_failed",
+      "validation_issues": {
+        "10": "all-joint tracking RMSE exceeds 0.20 rad"
+      },
+      "simulations": {
+        "0": {
+          "accepted": true,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 1.132504527230931,
+          "standby_settled_max_dq": 0.0099297352503183,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 559,
+            "all_joint_rmse_rad": 0.198246941526473,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.198246941526473,
+            "expected_steps": 559,
+            "arms_rmse_rad": 0.22763822986482996,
+            "arms_max_abs_error_rad": 0.6809385459602169
+          }
+        },
+        "10": {
+          "accepted": false,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 1.0333568734383434,
+          "standby_settled_max_dq": 0.009941488349155472,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 559,
+            "all_joint_rmse_rad": 0.2004877137193081,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.2004877137193081,
+            "expected_steps": 559,
+            "arms_rmse_rad": 0.23210421065817882,
+            "arms_max_abs_error_rad": 0.672778700958508
+          }
+        }
+      },
+      "attempted_trackers": {
+        "e11c_0220000": {
+          "0": {
+            "accepted": false,
+            "completed": false,
+            "upright": false,
+            "aborts": 0,
+            "fall_phase": "policy",
+            "fall_s": 21.068,
+            "standby_ready": false,
+            "r1x_never": false,
+            "smooth": false,
+            "standby_settled_max_tilt_err_deg": null,
+            "standby_settled_max_dq": null,
+            "pass": false,
+            "tracking": {
+              "gesture_steps": 179,
+              "all_joint_rmse_rad": 0.05955178167332011,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.05955178167332011,
+              "expected_steps": 559,
+              "arms_rmse_rad": 0.06051900563911047,
+              "arms_max_abs_error_rad": 0.15983741669328466
+            }
+          },
+          "10": {
+            "accepted": false,
+            "completed": false,
+            "upright": false,
+            "aborts": 0,
+            "fall_phase": "policy",
+            "fall_s": 21.145,
+            "standby_ready": false,
+            "r1x_never": false,
+            "smooth": false,
+            "standby_settled_max_tilt_err_deg": null,
+            "standby_settled_max_dq": null,
+            "pass": false,
+            "tracking": {
+              "gesture_steps": 183,
+              "all_joint_rmse_rad": 0.06320495242680549,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.06320495242680549,
+              "expected_steps": 559,
+              "arms_rmse_rad": 0.06136663600089531,
+              "arms_max_abs_error_rad": 0.16848344218836575
+            }
+          }
+        },
+        "e24_0355000": {
+          "0": {
+            "accepted": true,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 1.132504527230931,
+            "standby_settled_max_dq": 0.0099297352503183,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 559,
+              "all_joint_rmse_rad": 0.198246941526473,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.198246941526473,
+              "expected_steps": 559,
+              "arms_rmse_rad": 0.22763822986482996,
+              "arms_max_abs_error_rad": 0.6809385459602169
+            }
+          },
+          "10": {
+            "accepted": false,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 1.0333568734383434,
+            "standby_settled_max_dq": 0.009941488349155472,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 559,
+              "all_joint_rmse_rad": 0.2004877137193081,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.2004877137193081,
+              "expected_steps": 559,
+              "arms_rmse_rad": 0.23210421065817882,
+              "arms_max_abs_error_rad": 0.672778700958508
+            }
+          }
+        },
+        "e13i_0291000": {
+          "0": {
+            "accepted": false,
+            "completed": false,
+            "upright": false,
+            "aborts": 0,
+            "fall_phase": "policy",
+            "fall_s": 21.165,
+            "standby_ready": false,
+            "r1x_never": false,
+            "smooth": false,
+            "standby_settled_max_tilt_err_deg": null,
+            "standby_settled_max_dq": null,
+            "pass": false,
+            "tracking": {
+              "gesture_steps": 184,
+              "all_joint_rmse_rad": 0.08079934517445196,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.08079934517445196,
+              "expected_steps": 559,
+              "arms_rmse_rad": 0.08707155808587548,
+              "arms_max_abs_error_rad": 0.2719567860539641
+            }
+          }
+        }
+      },
+      "preview": "video_motion/work/raw_batch/skills/pickup_box_3/pickup_box_3_policy_vs_reference.webm"
+    },
+    "pickup_item_1": {
+      "source": "raw_videos/pickup_item_1.mp4",
+      "source_sha256": "ca6246cc939708134087a790f9806c7b895008830522866968728c8b47b1c5dc",
+      "normalized_sha256": "64726883a4d972cbd206e3cb93a702ddff6ed5d62f4c0863f989e40faab0d8cb",
+      "clip": "pickup_item_1",
+      "model": "e11c_0220000",
+      "frames": 954,
+      "duration_s": 19.06,
+      "transitions": "standing",
+      "original_motion_preserved": true,
+      "artifact": "SuperMimic-Repro-Sim2Real/deploy_artifacts/clips/pickup_item_1.npz",
+      "artifact_sha256": "1a9de9bb38ff24526834c1b17047e9f4efef2c843ddd9663e8eae33cec982f8b",
+      "simulation_status": "simulation_failed",
+      "validation_issues": {
+        "0": "fall during policy",
+        "10": "fall during policy"
+      },
+      "simulations": {
+        "0": {
+          "accepted": false,
+          "completed": false,
+          "upright": false,
+          "aborts": 0,
+          "fall_phase": "policy",
+          "fall_s": 19.474,
+          "standby_ready": false,
+          "r1x_never": false,
+          "smooth": false,
+          "standby_settled_max_tilt_err_deg": null,
+          "standby_settled_max_dq": null,
+          "pass": false,
+          "tracking": {
+            "gesture_steps": 99,
+            "all_joint_rmse_rad": 0.056435799073711906,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.056435799073711906,
+            "expected_steps": 704,
+            "arms_rmse_rad": 0.06440570956836489,
+            "arms_max_abs_error_rad": 0.16006172860307144
+          }
+        },
+        "10": {
+          "accepted": false,
+          "completed": false,
+          "upright": false,
+          "aborts": 0,
+          "fall_phase": "policy",
+          "fall_s": 19.484,
+          "standby_ready": false,
+          "r1x_never": false,
+          "smooth": false,
+          "standby_settled_max_tilt_err_deg": null,
+          "standby_settled_max_dq": null,
+          "pass": false,
+          "tracking": {
+            "gesture_steps": 100,
+            "all_joint_rmse_rad": 0.057158482792346296,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.057158482792346296,
+            "expected_steps": 704,
+            "arms_rmse_rad": 0.06562610923671866,
+            "arms_max_abs_error_rad": 0.16337549128697448
+          }
+        }
+      },
+      "attempted_trackers": {
+        "e11c_0220000": {
+          "0": {
+            "accepted": false,
+            "completed": false,
+            "upright": false,
+            "aborts": 0,
+            "fall_phase": "policy",
+            "fall_s": 19.474,
+            "standby_ready": false,
+            "r1x_never": false,
+            "smooth": false,
+            "standby_settled_max_tilt_err_deg": null,
+            "standby_settled_max_dq": null,
+            "pass": false,
+            "tracking": {
+              "gesture_steps": 99,
+              "all_joint_rmse_rad": 0.056435799073711906,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.056435799073711906,
+              "expected_steps": 704,
+              "arms_rmse_rad": 0.06440570956836489,
+              "arms_max_abs_error_rad": 0.16006172860307144
+            }
+          },
+          "10": {
+            "accepted": false,
+            "completed": false,
+            "upright": false,
+            "aborts": 0,
+            "fall_phase": "policy",
+            "fall_s": 19.484,
+            "standby_ready": false,
+            "r1x_never": false,
+            "smooth": false,
+            "standby_settled_max_tilt_err_deg": null,
+            "standby_settled_max_dq": null,
+            "pass": false,
+            "tracking": {
+              "gesture_steps": 100,
+              "all_joint_rmse_rad": 0.057158482792346296,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.057158482792346296,
+              "expected_steps": 704,
+              "arms_rmse_rad": 0.06562610923671866,
+              "arms_max_abs_error_rad": 0.16337549128697448
+            }
+          }
+        },
+        "e24_0355000": {
+          "0": {
+            "accepted": false,
+            "completed": false,
+            "upright": false,
+            "aborts": 0,
+            "fall_phase": "policy",
+            "fall_s": 20.422,
+            "standby_ready": false,
+            "r1x_never": false,
+            "smooth": false,
+            "standby_settled_max_tilt_err_deg": null,
+            "standby_settled_max_dq": null,
+            "pass": false,
+            "tracking": {
+              "gesture_steps": 147,
+              "all_joint_rmse_rad": 0.1396078895349043,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.1396078895349043,
+              "expected_steps": 704,
+              "arms_rmse_rad": 0.1412101833980016,
+              "arms_max_abs_error_rad": 0.41644537063773224
+            }
+          }
+        },
+        "e13i_0291000": {
+          "0": {
+            "accepted": false,
+            "completed": false,
+            "upright": false,
+            "aborts": 0,
+            "fall_phase": "policy",
+            "fall_s": 19.428,
+            "standby_ready": false,
+            "r1x_never": false,
+            "smooth": false,
+            "standby_settled_max_tilt_err_deg": null,
+            "standby_settled_max_dq": null,
+            "pass": false,
+            "tracking": {
+              "gesture_steps": 97,
+              "all_joint_rmse_rad": 0.08744222691286407,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.08744222691286407,
+              "expected_steps": 704,
+              "arms_rmse_rad": 0.09976406097802709,
+              "arms_max_abs_error_rad": 0.2890309112204178
+            }
+          }
+        }
+      },
+      "preview": "video_motion/work/raw_batch/skills/pickup_item_1/pickup_item_1_policy_vs_reference.webm"
+    },
+    "pickup_item_and_put_in_bag_1": {
+      "source": "raw_videos/pickup_item_and_put_in_bag_1.mp4",
+      "source_sha256": "1503c60c02ece72f9a58adb7e0b50f7dc1c631bba2a7079e868a33fd1f849e10",
+      "normalized_sha256": "a0baad93a3bff2327175b27a7519ebd8d312186b4692dd9e51cc6f44897d19b3",
+      "clip": "pickup_item_and_put_in_bag_1",
+      "model": "e11c_0220000",
+      "frames": 984,
+      "duration_s": 19.66,
+      "transitions": "standing",
+      "original_motion_preserved": true,
+      "artifact": "SuperMimic-Repro-Sim2Real/deploy_artifacts/clips/pickup_item_and_put_in_bag_1.npz",
+      "artifact_sha256": "8e478a1a9dfed85362eb1d39d5bf7940e7a6ede1664f0d0b7c6ac6b58c4f265b",
+      "simulation_status": "simulation_failed",
+      "validation_issues": {
+        "0": "fall during policy",
+        "10": "fall during policy"
+      },
+      "simulations": {
+        "0": {
+          "accepted": false,
+          "completed": false,
+          "upright": false,
+          "aborts": 0,
+          "fall_phase": "policy",
+          "fall_s": 19.487,
+          "standby_ready": false,
+          "r1x_never": false,
+          "smooth": false,
+          "standby_settled_max_tilt_err_deg": null,
+          "standby_settled_max_dq": null,
+          "pass": false,
+          "tracking": {
+            "gesture_steps": 100,
+            "all_joint_rmse_rad": 0.06018584671493601,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.06018584671493601,
+            "expected_steps": 734,
+            "arms_rmse_rad": 0.06538249280371715,
+            "arms_max_abs_error_rad": 0.1659377580042688
+          }
+        },
+        "10": {
+          "accepted": false,
+          "completed": false,
+          "upright": false,
+          "aborts": 0,
+          "fall_phase": "policy",
+          "fall_s": 19.506,
+          "standby_ready": false,
+          "r1x_never": false,
+          "smooth": false,
+          "standby_settled_max_tilt_err_deg": null,
+          "standby_settled_max_dq": null,
+          "pass": false,
+          "tracking": {
+            "gesture_steps": 101,
+            "all_joint_rmse_rad": 0.05999374482952507,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.05999374482952507,
+            "expected_steps": 734,
+            "arms_rmse_rad": 0.06631639104749296,
+            "arms_max_abs_error_rad": 0.16838667830239662
+          }
+        }
+      },
+      "attempted_trackers": {
+        "e11c_0220000": {
+          "0": {
+            "accepted": false,
+            "completed": false,
+            "upright": false,
+            "aborts": 0,
+            "fall_phase": "policy",
+            "fall_s": 19.487,
+            "standby_ready": false,
+            "r1x_never": false,
+            "smooth": false,
+            "standby_settled_max_tilt_err_deg": null,
+            "standby_settled_max_dq": null,
+            "pass": false,
+            "tracking": {
+              "gesture_steps": 100,
+              "all_joint_rmse_rad": 0.06018584671493601,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.06018584671493601,
+              "expected_steps": 734,
+              "arms_rmse_rad": 0.06538249280371715,
+              "arms_max_abs_error_rad": 0.1659377580042688
+            }
+          },
+          "10": {
+            "accepted": false,
+            "completed": false,
+            "upright": false,
+            "aborts": 0,
+            "fall_phase": "policy",
+            "fall_s": 19.506,
+            "standby_ready": false,
+            "r1x_never": false,
+            "smooth": false,
+            "standby_settled_max_tilt_err_deg": null,
+            "standby_settled_max_dq": null,
+            "pass": false,
+            "tracking": {
+              "gesture_steps": 101,
+              "all_joint_rmse_rad": 0.05999374482952507,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.05999374482952507,
+              "expected_steps": 734,
+              "arms_rmse_rad": 0.06631639104749296,
+              "arms_max_abs_error_rad": 0.16838667830239662
+            }
+          }
+        },
+        "e24_0355000": {
+          "0": {
+            "accepted": false,
+            "completed": false,
+            "upright": false,
+            "aborts": 0,
+            "fall_phase": "policy",
+            "fall_s": 19.705,
+            "standby_ready": false,
+            "r1x_never": false,
+            "smooth": false,
+            "standby_settled_max_tilt_err_deg": null,
+            "standby_settled_max_dq": null,
+            "pass": false,
+            "tracking": {
+              "gesture_steps": 111,
+              "all_joint_rmse_rad": 0.11226596243980146,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.11226596243980146,
+              "expected_steps": 734,
+              "arms_rmse_rad": 0.1227669425313044,
+              "arms_max_abs_error_rad": 0.37836988770714386
+            }
+          }
+        },
+        "e13i_0291000": {
+          "0": {
+            "accepted": false,
+            "completed": false,
+            "upright": false,
+            "aborts": 0,
+            "fall_phase": "policy",
+            "fall_s": 19.464,
+            "standby_ready": false,
+            "r1x_never": false,
+            "smooth": false,
+            "standby_settled_max_tilt_err_deg": null,
+            "standby_settled_max_dq": null,
+            "pass": false,
+            "tracking": {
+              "gesture_steps": 99,
+              "all_joint_rmse_rad": 0.08362890690487694,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.08362890690487694,
+              "expected_steps": 734,
+              "arms_rmse_rad": 0.09163903862347621,
+              "arms_max_abs_error_rad": 0.281355377913565
+            }
+          }
+        }
+      },
+      "preview": "video_motion/work/raw_batch/skills/pickup_item_and_put_in_bag_1/pickup_item_and_put_in_bag_1_policy_vs_reference.webm"
+    },
+    "press_switch_1": {
+      "source": "raw_videos/press_switch_1.mp4",
+      "source_sha256": "de26ba177a6fa12803471b2fe25e58186d5bd161aa4d5b6f714100fa46f05d52",
+      "normalized_sha256": "2a7fefacf9ecbd4175d618704718fbe4cacae7ffce3d96169d84bf20e0d2613e",
+      "clip": "press_switch_1",
+      "model": "e11c_0220000",
+      "frames": 412,
+      "duration_s": 8.22,
+      "transitions": "none",
+      "original_motion_preserved": true,
+      "artifact": "SuperMimic-Repro-Sim2Real/deploy_artifacts/clips/press_switch_1.npz",
+      "artifact_sha256": "2326f2d51fdab71e19df57b4081c4db639772859c530b72b75308cef158ca3c0",
+      "simulation_status": "validated",
+      "validation_issues": {},
+      "simulations": {
+        "0": {
+          "accepted": true,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 7.130286429428239,
+          "standby_settled_max_dq": 0.009951666820265846,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 411,
+            "all_joint_rmse_rad": 0.09503525662898692,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.09503525662898692,
+            "expected_steps": 411,
+            "arms_rmse_rad": 0.11421873636941132,
+            "arms_max_abs_error_rad": 0.4238751915992866
+          }
+        },
+        "10": {
+          "accepted": true,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 7.098797065444858,
+          "standby_settled_max_dq": 0.01065094375508892,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 411,
+            "all_joint_rmse_rad": 0.09460952570151551,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.09460952570151551,
+            "expected_steps": 411,
+            "arms_rmse_rad": 0.11375727341142577,
+            "arms_max_abs_error_rad": 0.42128951205474297
+          }
+        }
+      },
+      "attempted_trackers": {
+        "e11c_0220000": {
+          "0": {
+            "accepted": true,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 7.130286429428239,
+            "standby_settled_max_dq": 0.009951666820265846,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 411,
+              "all_joint_rmse_rad": 0.09503525662898692,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.09503525662898692,
+              "expected_steps": 411,
+              "arms_rmse_rad": 0.11421873636941132,
+              "arms_max_abs_error_rad": 0.4238751915992866
+            }
+          },
+          "10": {
+            "accepted": true,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 7.098797065444858,
+            "standby_settled_max_dq": 0.01065094375508892,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 411,
+              "all_joint_rmse_rad": 0.09460952570151551,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.09460952570151551,
+              "expected_steps": 411,
+              "arms_rmse_rad": 0.11375727341142577,
+              "arms_max_abs_error_rad": 0.42128951205474297
+            }
+          }
+        }
+      },
+      "preview": "video_motion/work/raw_batch/skills/press_switch_1/press_switch_1_policy_vs_reference.webm"
+    },
+    "press_switch_2": {
+      "source": "raw_videos/press_switch_2.mp4",
+      "source_sha256": "486f7130307f159ca4a2cec1271783f1239e44ecab8511e5cfae2e9a933017cf",
+      "normalized_sha256": "63204c8bf3fa0e21bf05f86051be69a2f2c536bef28c9da10e5a77dccfed1494",
+      "clip": "press_switch_2",
+      "model": "e11c_0220000",
+      "frames": 381,
+      "duration_s": 7.6,
+      "transitions": "none",
+      "original_motion_preserved": true,
+      "artifact": "SuperMimic-Repro-Sim2Real/deploy_artifacts/clips/press_switch_2.npz",
+      "artifact_sha256": "7aeabcadbfe09eae843f21729c5451a10fb18845f8e672a59a58ace570fe2fd2",
+      "simulation_status": "validated",
+      "validation_issues": {},
+      "simulations": {
+        "0": {
+          "accepted": true,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 6.41375474474775,
+          "standby_settled_max_dq": 0.01065405709477708,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 380,
+            "all_joint_rmse_rad": 0.09999669541809102,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.09999669541809102,
+            "expected_steps": 380,
+            "arms_rmse_rad": 0.11906613277973614,
+            "arms_max_abs_error_rad": 0.4316388397564894
+          }
+        },
+        "10": {
+          "accepted": true,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 6.291923270645002,
+          "standby_settled_max_dq": 0.011428607133163383,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 380,
+            "all_joint_rmse_rad": 0.09912899735256624,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.09912899735256624,
+            "expected_steps": 380,
+            "arms_rmse_rad": 0.11789863008684073,
+            "arms_max_abs_error_rad": 0.4297125823764289
+          }
+        }
+      },
+      "attempted_trackers": {
+        "e11c_0220000": {
+          "0": {
+            "accepted": true,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 6.41375474474775,
+            "standby_settled_max_dq": 0.01065405709477708,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 380,
+              "all_joint_rmse_rad": 0.09999669541809102,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.09999669541809102,
+              "expected_steps": 380,
+              "arms_rmse_rad": 0.11906613277973614,
+              "arms_max_abs_error_rad": 0.4316388397564894
+            }
+          },
+          "10": {
+            "accepted": true,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 6.291923270645002,
+            "standby_settled_max_dq": 0.011428607133163383,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 380,
+              "all_joint_rmse_rad": 0.09912899735256624,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.09912899735256624,
+              "expected_steps": 380,
+              "arms_rmse_rad": 0.11789863008684073,
+              "arms_max_abs_error_rad": 0.4297125823764289
+            }
+          }
+        }
+      },
+      "preview": "video_motion/work/raw_batch/skills/press_switch_2/press_switch_2_policy_vs_reference.webm"
+    },
+    "unplug_ethernet_1": {
+      "source": "raw_videos/unplug_ethernet_1.mp4",
+      "source_sha256": "eaddd071bec4e86cf92d39a26a527dc70661129fa96dc58e022b7dae12e4feae",
+      "normalized_sha256": "b173c682eb3ff9287cba3dcbe657da23da3d21825f7710501c4015cf87fbc417",
+      "clip": "unplug_ethernet_1",
+      "model": "e11c_0220000",
+      "frames": 566,
+      "duration_s": 11.3,
+      "transitions": "none",
+      "original_motion_preserved": true,
+      "artifact": "SuperMimic-Repro-Sim2Real/deploy_artifacts/clips/unplug_ethernet_1.npz",
+      "artifact_sha256": "e7f940f23e657f04dea2d6ae1a8ca0ea49d5214fb6d4a142e74eb9f4c4c1fa08",
+      "simulation_status": "validated",
+      "validation_issues": {},
+      "simulations": {
+        "0": {
+          "accepted": true,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 6.271243893472682,
+          "standby_settled_max_dq": 0.012664885737049141,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 565,
+            "all_joint_rmse_rad": 0.08230626402753036,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.08230626402753036,
+            "expected_steps": 565,
+            "arms_rmse_rad": 0.08713603532187746,
+            "arms_max_abs_error_rad": 0.34827484290280963
+          }
+        },
+        "10": {
+          "accepted": true,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 6.254361249319585,
+          "standby_settled_max_dq": 0.012499270389566674,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 565,
+            "all_joint_rmse_rad": 0.08205689094113082,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.08205689094113082,
+            "expected_steps": 565,
+            "arms_rmse_rad": 0.08705229111730493,
+            "arms_max_abs_error_rad": 0.3457208213363766
+          }
+        }
+      },
+      "attempted_trackers": {
+        "e11c_0220000": {
+          "0": {
+            "accepted": true,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 6.271243893472682,
+            "standby_settled_max_dq": 0.012664885737049141,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 565,
+              "all_joint_rmse_rad": 0.08230626402753036,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.08230626402753036,
+              "expected_steps": 565,
+              "arms_rmse_rad": 0.08713603532187746,
+              "arms_max_abs_error_rad": 0.34827484290280963
+            }
+          },
+          "10": {
+            "accepted": true,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 6.254361249319585,
+            "standby_settled_max_dq": 0.012499270389566674,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 565,
+              "all_joint_rmse_rad": 0.08205689094113082,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.08205689094113082,
+              "expected_steps": 565,
+              "arms_rmse_rad": 0.08705229111730493,
+              "arms_max_abs_error_rad": 0.3457208213363766
+            }
+          }
+        }
+      },
+      "preview": "video_motion/work/raw_batch/skills/unplug_ethernet_1/unplug_ethernet_1_policy_vs_reference.webm"
+    },
+    "unplug_ethernet_2": {
+      "source": "raw_videos/unplug_ethernet_2.mp4",
+      "source_sha256": "da684ce067d374c899fd6ef6cfd1b485cee0b4c215999139c6745f29c452beaf",
+      "normalized_sha256": "224f2992213753303883e754e49845d3ae99b6f9c9e90133e473e216426c0d53",
+      "clip": "unplug_ethernet_2",
+      "model": "e11c_0220000",
+      "frames": 672,
+      "duration_s": 13.42,
+      "transitions": "none",
+      "original_motion_preserved": true,
+      "artifact": "SuperMimic-Repro-Sim2Real/deploy_artifacts/clips/unplug_ethernet_2.npz",
+      "artifact_sha256": "806da7bc4576176f0285e3a353e72750d1faebeeab28bf48285346e4283873b2",
+      "simulation_status": "validated",
+      "validation_issues": {},
+      "simulations": {
+        "0": {
+          "accepted": true,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 6.916020899012706,
+          "standby_settled_max_dq": 0.012255646468406428,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 671,
+            "all_joint_rmse_rad": 0.0918412069690328,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.0918412069690328,
+            "expected_steps": 671,
+            "arms_rmse_rad": 0.10414019315368685,
+            "arms_max_abs_error_rad": 0.37331613257008456
+          }
+        },
+        "10": {
+          "accepted": true,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 6.977574999937021,
+          "standby_settled_max_dq": 0.01181137184533855,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 671,
+            "all_joint_rmse_rad": 0.09183157726124064,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.09183157726124064,
+            "expected_steps": 671,
+            "arms_rmse_rad": 0.10416135543066313,
+            "arms_max_abs_error_rad": 0.3713301239059108
+          }
+        }
+      },
+      "attempted_trackers": {
+        "e11c_0220000": {
+          "0": {
+            "accepted": true,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 6.916020899012706,
+            "standby_settled_max_dq": 0.012255646468406428,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 671,
+              "all_joint_rmse_rad": 0.0918412069690328,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.0918412069690328,
+              "expected_steps": 671,
+              "arms_rmse_rad": 0.10414019315368685,
+              "arms_max_abs_error_rad": 0.37331613257008456
+            }
+          },
+          "10": {
+            "accepted": true,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 6.977574999937021,
+            "standby_settled_max_dq": 0.01181137184533855,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 671,
+              "all_joint_rmse_rad": 0.09183157726124064,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.09183157726124064,
+              "expected_steps": 671,
+              "arms_rmse_rad": 0.10416135543066313,
+              "arms_max_abs_error_rad": 0.3713301239059108
+            }
+          }
+        }
+      },
+      "preview": "video_motion/work/raw_batch/skills/unplug_ethernet_2/unplug_ethernet_2_policy_vs_reference.webm"
+    },
+    "unplug_ethernet_3": {
+      "source": "raw_videos/unplug_ethernet_3.mp4",
+      "source_sha256": "b3ded5ef87bab828d08a809b52340e1b9e7795cfbcef791374630a215f61926f",
+      "normalized_sha256": "3f3de0c43310c8924580032f07412b410cf189f01057633131ceecb9859d8543",
+      "clip": "unplug_ethernet_3",
+      "model": "e11c_0220000",
+      "frames": 457,
+      "duration_s": 9.12,
+      "transitions": "none",
+      "original_motion_preserved": true,
+      "artifact": "SuperMimic-Repro-Sim2Real/deploy_artifacts/clips/unplug_ethernet_3.npz",
+      "artifact_sha256": "3f297c1cc18eafaed0b844aea0c484be1484c0416dc934c3c63b0ae7b5a319f9",
+      "simulation_status": "validated",
+      "validation_issues": {},
+      "simulations": {
+        "0": {
+          "accepted": true,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 5.717035848952726,
+          "standby_settled_max_dq": 0.010027258406461707,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 456,
+            "all_joint_rmse_rad": 0.08514757599579917,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.08514757599579917,
+            "expected_steps": 456,
+            "arms_rmse_rad": 0.09570542728856639,
+            "arms_max_abs_error_rad": 0.30447864975890504
+          }
+        },
+        "10": {
+          "accepted": true,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 5.747434161479029,
+          "standby_settled_max_dq": 0.010095576637005046,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 456,
+            "all_joint_rmse_rad": 0.08525597030697027,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.08525597030697027,
+            "expected_steps": 456,
+            "arms_rmse_rad": 0.0959511121036723,
+            "arms_max_abs_error_rad": 0.3004160285892533
+          }
+        }
+      },
+      "attempted_trackers": {
+        "e11c_0220000": {
+          "0": {
+            "accepted": true,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 5.717035848952726,
+            "standby_settled_max_dq": 0.010027258406461707,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 456,
+              "all_joint_rmse_rad": 0.08514757599579917,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.08514757599579917,
+              "expected_steps": 456,
+              "arms_rmse_rad": 0.09570542728856639,
+              "arms_max_abs_error_rad": 0.30447864975890504
+            }
+          },
+          "10": {
+            "accepted": true,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 5.747434161479029,
+            "standby_settled_max_dq": 0.010095576637005046,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 456,
+              "all_joint_rmse_rad": 0.08525597030697027,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.08525597030697027,
+              "expected_steps": 456,
+              "arms_rmse_rad": 0.0959511121036723,
+              "arms_max_abs_error_rad": 0.3004160285892533
+            }
+          }
+        }
+      },
+      "preview": "video_motion/work/raw_batch/skills/unplug_ethernet_3/unplug_ethernet_3_policy_vs_reference.webm"
+    },
+    "unplug_pdu_1": {
+      "source": "raw_videos/unplug_pdu_1.mp4",
+      "source_sha256": "77fc7e6677f0b5e5e4d90983394469e34f9fec064be2239ecd843393565aa70f",
+      "normalized_sha256": "8c4c85e613bed497437c008d25d4930584255350cbe792968173ef6815678c6e",
+      "clip": "unplug_pdu_1",
+      "model": "e11c_0220000",
+      "frames": 1104,
+      "duration_s": 22.06,
+      "transitions": "standing",
+      "original_motion_preserved": true,
+      "artifact": "SuperMimic-Repro-Sim2Real/deploy_artifacts/clips/unplug_pdu_1.npz",
+      "artifact_sha256": "eacccccce97f331ad980615c510456ec80dd08926e244fe0654f42fd2555088a",
+      "simulation_status": "validated",
+      "validation_issues": {},
+      "simulations": {
+        "0": {
+          "accepted": true,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 3.0010148264900582,
+          "standby_settled_max_dq": 0.004898003343045641,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 854,
+            "all_joint_rmse_rad": 0.10082643124046188,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.10082643124046188,
+            "expected_steps": 854,
+            "arms_rmse_rad": 0.10636741076814976,
+            "arms_max_abs_error_rad": 0.5052744307655095
+          }
+        },
+        "10": {
+          "accepted": true,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 3.01776434030156,
+          "standby_settled_max_dq": 0.00490495735532297,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 854,
+            "all_joint_rmse_rad": 0.09915645598356525,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.09915645598356525,
+            "expected_steps": 854,
+            "arms_rmse_rad": 0.1044119736076346,
+            "arms_max_abs_error_rad": 0.49358474192322643
+          }
+        }
+      },
+      "attempted_trackers": {
+        "e11c_0220000": {
+          "0": {
+            "accepted": true,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 3.0010148264900582,
+            "standby_settled_max_dq": 0.004898003343045641,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 854,
+              "all_joint_rmse_rad": 0.10082643124046188,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.10082643124046188,
+              "expected_steps": 854,
+              "arms_rmse_rad": 0.10636741076814976,
+              "arms_max_abs_error_rad": 0.5052744307655095
+            }
+          },
+          "10": {
+            "accepted": true,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 3.01776434030156,
+            "standby_settled_max_dq": 0.00490495735532297,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 854,
+              "all_joint_rmse_rad": 0.09915645598356525,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.09915645598356525,
+              "expected_steps": 854,
+              "arms_rmse_rad": 0.1044119736076346,
+              "arms_max_abs_error_rad": 0.49358474192322643
+            }
+          }
+        }
+      },
+      "preview": "video_motion/work/raw_batch/skills/unplug_pdu_1/unplug_pdu_1_policy_vs_reference.webm"
+    },
+    "unplug_pdu_2": {
+      "source": "raw_videos/unplug_pdu_2.mp4",
+      "source_sha256": "1c64bea7b2925e6af494607d275331d57af462db724567808aab8a997f1f74fa",
+      "normalized_sha256": "7de01a5d5a7bf54730b8e29a005de71c3239fbfde027ec97e3e9d65e76ab93c2",
+      "clip": "unplug_pdu_2",
+      "model": "e11c_0220000",
+      "frames": 736,
+      "duration_s": 14.7,
+      "transitions": "standing",
+      "original_motion_preserved": true,
+      "artifact": "SuperMimic-Repro-Sim2Real/deploy_artifacts/clips/unplug_pdu_2.npz",
+      "artifact_sha256": "9ef272c54a29d56a3ce27609e738a581f343c5a97b8a0f6ca2cd740073153665",
+      "simulation_status": "validated",
+      "validation_issues": {},
+      "simulations": {
+        "0": {
+          "accepted": true,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 3.0387237272874232,
+          "standby_settled_max_dq": 0.004898003343045641,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 486,
+            "all_joint_rmse_rad": 0.09586501736299753,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.09586501736299753,
+            "expected_steps": 486,
+            "arms_rmse_rad": 0.09280120061792003,
+            "arms_max_abs_error_rad": 0.4142897184969665
+          }
+        },
+        "10": {
+          "accepted": true,
+          "completed": true,
+          "upright": true,
+          "aborts": 0,
+          "fall_phase": null,
+          "fall_s": null,
+          "standby_ready": true,
+          "r1x_never": false,
+          "smooth": true,
+          "standby_settled_max_tilt_err_deg": 3.043291742804885,
+          "standby_settled_max_dq": 0.00490495735532297,
+          "pass": true,
+          "tracking": {
+            "gesture_steps": 486,
+            "all_joint_rmse_rad": 0.09762943938757312,
+            "selected_group": "all",
+            "selected_rmse_rad": 0.09762943938757312,
+            "expected_steps": 486,
+            "arms_rmse_rad": 0.0955664249656538,
+            "arms_max_abs_error_rad": 0.4138597799182509
+          }
+        }
+      },
+      "attempted_trackers": {
+        "e11c_0220000": {
+          "0": {
+            "accepted": true,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 3.0387237272874232,
+            "standby_settled_max_dq": 0.004898003343045641,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 486,
+              "all_joint_rmse_rad": 0.09586501736299753,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.09586501736299753,
+              "expected_steps": 486,
+              "arms_rmse_rad": 0.09280120061792003,
+              "arms_max_abs_error_rad": 0.4142897184969665
+            }
+          },
+          "10": {
+            "accepted": true,
+            "completed": true,
+            "upright": true,
+            "aborts": 0,
+            "fall_phase": null,
+            "fall_s": null,
+            "standby_ready": true,
+            "r1x_never": false,
+            "smooth": true,
+            "standby_settled_max_tilt_err_deg": 3.043291742804885,
+            "standby_settled_max_dq": 0.00490495735532297,
+            "pass": true,
+            "tracking": {
+              "gesture_steps": 486,
+              "all_joint_rmse_rad": 0.09762943938757312,
+              "selected_group": "all",
+              "selected_rmse_rad": 0.09762943938757312,
+              "expected_steps": 486,
+              "arms_rmse_rad": 0.0955664249656538,
+              "arms_max_abs_error_rad": 0.4138597799182509
+            }
+          }
+        }
+      },
+      "preview": "video_motion/work/raw_batch/skills/unplug_pdu_2/unplug_pdu_2_policy_vs_reference.webm"
+    }
+  },
+  "counts": {
+    "added": 15,
+    "validated": 11,
+    "simulation_failed": 4
+  }
+}

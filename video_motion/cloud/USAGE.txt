@@ -35,6 +35,40 @@ Pose extraction runs on the VM. The current workflow returns the pose cache
 to the Jetson for GMR retargeting, deploy-reference export, and local simulation.
 No fine-tuning or hardware playback is performed by these cloud scripts.
 
+Filename-named video batches:
+  Normalize source videos before upload with ffmpeg's display-matrix autorotation
+  and -vf fps=30 -an -c:v libx264 -crf 17 -pix_fmt yuv420p. Check that the
+  resulting person is upright; the raw_videos phone recordings have a -90-degree
+  display matrix. Preserve raw sources and use the filename stem as the clip name.
+  Record source_sha256 and normalized_sha256 for each entry under a manifest's
+  clips object, with source relative to the local policies root.
+
+  Upload normalized videos to inputs/ and the manifest to cloud/. Reuse env:
+    env/bin/python cloud/run-batch.py cloud/raw-batch-inputs.json --gpus 1 2
+  Select GPU indices after checking other workloads. The runner checks input
+  fingerprints, refuses stale caches, and writes logs/raw_batch/NAME.{log,exit}.
+  Return work/gvhmr/NAME/{hmr4d_results.pt,input.sha256} to the local work directory
+  under gvhmr/NAME/, beside video30/NAME.mp4 and inputs.json. Then run locally:
+    g1_deploy/venv/bin/python video_motion/prepare_batch.py \
+      video_motion/work/raw_batch/inputs.json \
+      --work-dir video_motion/work/raw_batch --workers 2
+  Optional --names NAME ... processes a subset. --wait-for-cache allows a separate
+  transfer process to deliver complete pose-cache directories while processing.
+  --model selects another installed pretrained tracker. To evaluate another
+  tracker against an already exported clip without repeating extraction or IK:
+    source g1_deploy/env.sh
+    g1_deploy/venv/bin/python video_motion/evaluate_skill.py --clip NAME \
+      --work-dir video_motion/work/raw_batch/skills/NAME --track-group all \
+      --model e24_0355000
+  Repeat with --latency-ms 10 after a nominal pass. Preserve the per-model JSON
+  reports and render with render_skill_sim.py --model MODEL for the chosen tracker.
+
+  Each clip is retargeted, converted to 50 Hz, tested in nominal and 10 ms delay
+  simulation, and rendered beside its reference. Standing transitions are tried
+  after a failed start/end check. Reports preserve failed natural-transition
+  attempts. Simulation failures remain explicit; the script does not register
+  bank entries, infer gripper events, or change runtime safety thresholds.
+
 Measured for the current clips (excluding one-time environment installation):
   crunch: 20.84 s preprocessing + 0.28 s final prediction
   pickup: 24.00 s preprocessing + 0.27 s final prediction

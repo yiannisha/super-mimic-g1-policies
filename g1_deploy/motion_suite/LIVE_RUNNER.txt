@@ -51,7 +51,9 @@ control client never creates a DDS publisher and may disconnect independently
 of the runner. Normal SSH disconnect handling of the runner is unchanged.
 L2+Up in POST does not select the next bank item; use the explicit selector.
 
-Bank aliases: idle, walk-forward, clap, itch, dance46, dance22, arms, crunch, pickup.
+Bank aliases: idle, walk-forward, clap, itch, dance46, dance22, arms, crunch, pickup,
+plus 15 raw_videos filename stems listed with simulation results in USAGE.txt.
+Four raw-video entries have explicit failed-simulation labels in the bank.
 The bank is fixed at startup. Changing the bank JSON requires one restart.
 The previous bank remains active until a handoff succeeds. A failure before
 acceptance leaves the current policy running. A core/watchdog fault during

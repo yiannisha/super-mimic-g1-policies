@@ -43,5 +43,110 @@
     "model": "e11c_0220000",
     "clip": "pickup_reference",
     "label": "Custom pickup gesture (pickup.mp4)"
+  },
+  "open_door_1": {
+    "model": "e11c_0220000",
+    "clip": "open_door_1",
+    "label": "open door 1",
+    "simulation_status": "validated",
+    "validation_report": "video_motion/raw_video_skills.json"
+  },
+  "open_door_2": {
+    "model": "e11c_0220000",
+    "clip": "open_door_2",
+    "label": "open door 2",
+    "simulation_status": "validated",
+    "validation_report": "video_motion/raw_video_skills.json"
+  },
+  "open_door_3": {
+    "model": "e11c_0220000",
+    "clip": "open_door_3",
+    "label": "open door 3",
+    "simulation_status": "validated",
+    "validation_report": "video_motion/raw_video_skills.json"
+  },
+  "pickup_box_1": {
+    "model": "e24_0355000",
+    "clip": "pickup_box_1",
+    "label": "pickup box 1",
+    "simulation_status": "validated",
+    "validation_report": "video_motion/raw_video_skills.json"
+  },
+  "pickup_box_2": {
+    "model": "e11c_0220000",
+    "clip": "pickup_box_2",
+    "label": "pickup box 2 [SIMULATION FALL]",
+    "simulation_status": "simulation_failed",
+    "validation_report": "video_motion/raw_video_skills.json"
+  },
+  "pickup_box_3": {
+    "model": "e24_0355000",
+    "clip": "pickup_box_3",
+    "label": "pickup box 3 [SIMULATION CHECK FAILED]",
+    "simulation_status": "simulation_failed",
+    "validation_report": "video_motion/raw_video_skills.json"
+  },
+  "pickup_item_1": {
+    "model": "e11c_0220000",
+    "clip": "pickup_item_1",
+    "label": "pickup item 1 [SIMULATION FALL]",
+    "simulation_status": "simulation_failed",
+    "validation_report": "video_motion/raw_video_skills.json"
+  },
+  "pickup_item_and_put_in_bag_1": {
+    "model": "e11c_0220000",
+    "clip": "pickup_item_and_put_in_bag_1",
+    "label": "pickup item and put in bag 1 [SIMULATION FALL]",
+    "simulation_status": "simulation_failed",
+    "validation_report": "video_motion/raw_video_skills.json"
+  },
+  "press_switch_1": {
+    "model": "e11c_0220000",
+    "clip": "press_switch_1",
+    "label": "press switch 1",
+    "simulation_status": "validated",
+    "validation_report": "video_motion/raw_video_skills.json"
+  },
+  "press_switch_2": {
+    "model": "e11c_0220000",
+    "clip": "press_switch_2",
+    "label": "press switch 2",
+    "simulation_status": "validated",
+    "validation_report": "video_motion/raw_video_skills.json"
+  },
+  "unplug_ethernet_1": {
+    "model": "e11c_0220000",
+    "clip": "unplug_ethernet_1",
+    "label": "unplug ethernet 1",
+    "simulation_status": "validated",
+    "validation_report": "video_motion/raw_video_skills.json"
+  },
+  "unplug_ethernet_2": {
+    "model": "e11c_0220000",
+    "clip": "unplug_ethernet_2",
+    "label": "unplug ethernet 2",
+    "simulation_status": "validated",
+    "validation_report": "video_motion/raw_video_skills.json"
+  },
+  "unplug_ethernet_3": {
+    "model": "e11c_0220000",
+    "clip": "unplug_ethernet_3",
+    "label": "unplug ethernet 3",
+    "simulation_status": "validated",
+    "validation_report": "video_motion/raw_video_skills.json"
+  },
+  "unplug_pdu_1": {
+    "model": "e11c_0220000",
+    "clip": "unplug_pdu_1",
+    "label": "unplug pdu 1",
+    "simulation_status": "validated",
+    "validation_report": "video_motion/raw_video_skills.json"
+  },
+  "unplug_pdu_2": {
+    "model": "e11c_0220000",
+    "clip": "unplug_pdu_2",
+    "label": "unplug pdu 2",
+    "simulation_status": "validated",
+    "validation_report": "video_motion/raw_video_skills.json"
   }
 }

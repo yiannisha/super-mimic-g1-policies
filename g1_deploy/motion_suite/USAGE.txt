@@ -1,4 +1,4 @@
-Nine motion selections using pretrained trackers
+Motion selections using pretrained trackers
 
 No training or full simulation suite is part of this preparation.
 No robot-control process is launched during data preparation.
@@ -103,3 +103,56 @@ transients and is false. Full metrics and this distinction are in summary.json.
 Pickup's settled tilt error is close to the runner limit (7.97 vs 8 degrees).
 This is motion replay; pickup does not add grasping or object interaction logic.
 An existing live runner needs one restart to discover the new aliases.
+
+Raw-video skills (15 additional aliases; 24 bank entries total):
+
+The alias and deployment clip use each raw_videos filename stem. The source
+recordings are preserved. Phone rotation is applied to processing copies,
+followed by 30 Hz pose extraction on the existing cloud GPU environment and
+50 Hz G1 retargeting/export. These use existing pretrained ONNX trackers.
+
+Alias                             Model           Seconds  Simulation (0 / 10 ms)
+open_door_1                       e11c_0220000      10.00  PASS / PASS
+open_door_2                       e11c_0220000       8.42  PASS / PASS
+open_door_3                       e11c_0220000       6.26  PASS / PASS
+pickup_box_1                      e24_0355000       13.72  PASS / PASS
+pickup_box_2                      e11c_0220000      11.00  FALL / FALL
+pickup_box_3                      e24_0355000       16.16  PASS / tracking limit
+pickup_item_1                     e11c_0220000      19.06  FALL / FALL
+pickup_item_and_put_in_bag_1      e11c_0220000      19.66  FALL / FALL
+press_switch_1                    e11c_0220000       8.22  PASS / PASS
+press_switch_2                    e11c_0220000       7.60  PASS / PASS
+unplug_ethernet_1                 e11c_0220000      11.30  PASS / PASS
+unplug_ethernet_2                 e11c_0220000      13.42  PASS / PASS
+unplug_ethernet_3                 e11c_0220000       9.12  PASS / PASS
+unplug_pdu_1                      e11c_0220000      22.06  PASS / PASS
+unplug_pdu_2                      e11c_0220000      14.70  PASS / PASS
+
+The three FALL entries fell with all three installed trackers in nominal
+simulation. pickup_box_3 stays upright and completes with e24_0355000 at both
+delays, with all-joint tracking RMSE 0.19825 / 0.20049 rad against the existing
+0.20 rad limit. The failed entries are explicitly labeled in the bank.
+READY checks file availability and format; consult these simulation results
+when choosing a motion. All 24 references and three ONNX policies preload.
+
+The eleven PASS entries complete with zero falls/aborts, smooth handoffs,
+acceptable all-joint tracking, and settled standby within the runner limits,
+including ten seconds of unsupported PRE and POST. Existing controller and
+acceptance thresholds are retained. These results cover simulation.
+
+pickup_box_1 and pickup_box_3 select the existing e24_0355000 tracker. All other
+new aliases use e11c_0220000. Standing lead-in/out transitions are present for
+the five pickup recordings and two PDU recordings; natural motion remains
+inside those transitions. Other new clips retain their natural transitions.
+No gripper events were inferred. These are body-motion replays; object sensing,
+contact, and grasp success are outside this preparation.
+
+Inspect assets and commands without starting a controller:
+  ./run-motion.sh list
+  ./run-motion.sh open_door_1 --dry-run
+
+New aliases load on the next live-runner start. Simulation reports, failed
+attempts, traces, and policy/reference previews:
+  ../../video_motion/work/raw_batch/skills/NAME/
+Source/output fingerprints, selected trackers, and consolidated metrics:
+  ../../video_motion/raw_video_skills.json
